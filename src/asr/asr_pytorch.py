@@ -360,6 +360,8 @@ def train(args):
             torch.save(model.state_dict(), path)
             torch.save(model, path + ".pkl")
 
+    trainer.extend(extensions.snapshot_object(model, 'model_epoch{.updater.epoch}', savefun=torch_save),
+                                     trigger=(1, 'epoch'))
     trainer.extend(extensions.snapshot_object(model, 'model.loss.best', savefun=torch_save),
                    trigger=training.triggers.MinValueTrigger('validation/main/loss'))
     if mtl_mode is not 'ctc':
