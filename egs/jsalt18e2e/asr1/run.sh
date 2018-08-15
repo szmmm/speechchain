@@ -91,6 +91,7 @@ subset_num_spk=""
 
 # data set
 train_set=tr_babel10${subset_num_spk:+_${subset_num_spk}spk}
+storage=/mnt/scratch06/tmp/baskar/espnet/$RANDOM
 
 # data directories
 csjdir=../../csj
@@ -167,12 +168,28 @@ if [ ${stage} -le 0 ]; then
     done
 fi
 
-feat_tr_dir=${dumpdir}/${train_set}_${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
-feat_dt_dir=${dumpdir}/${train_dev}_${train_set}/delta${do_delta}; mkdir -p ${feat_dt_dir}
+feat_tr_dir=${dumpdir}/${train_set}_${train_set}/delta${do_delta};
+# mkdir -p ${feat_tr_dir}
+feat_dt_dir=${dumpdir}/${train_dev}_${train_set}/delta${do_delta};
+# mkdir -p ${feat_dt_dir}
 if [ ${stage} -le 1 ]; then
 
-    utils/combine_data.sh data/tr_babel10_org data/tr_babel_cantonese data/tr_babel_bengali data/tr_babel_pashto data/tr_babel_turkish data/tr_babel_vietnamese data/tr_babel_haitian data/tr_babel_tamil data/tr_babel_kurmanji data/tr_babel_tokpisin data/tr_babel_georgian
-    utils/combine_data.sh data/dt_babel10_org data/dt_babel_cantonese data/dt_babel_bengali data/dt_babel_pashto data/dt_babel_turkish data/dt_babel_vietnamese data/dt_babel_haitian data/dt_babel_tamil data/dt_babel_kurmanji data/dt_babel_tokpisin data/dt_babel_georgian
+    #utils/combine_data.sh data/tr_babel10_org data/tr_babel_cantonese data/tr_babel_bengali data/tr_babel_pashto data/tr_babel_turkish data/tr_babel_vietnamese data/tr_babel_haitian data/tr_babel_tamil data/tr_babel_kurmanji data/tr_babel_tokpisin data/tr_babel_georgian
+    #utils/combine_data.sh data/dt_babel10_org data/dt_babel_cantonese data/dt_babel_bengali data/dt_babel_pashto data/dt_babel_turkish data/dt_babel_vietnamese data/dt_babel_haitian data/dt_babel_tamil data/dt_babel_kurmanji data/dt_babel_tokpisin data/dt_babel_georgian
+  fbankdir=fbank
+  <<"over"
+  for x in ${train_set} ${train_dev}; do
+      if [ ! -f data/${x}/featss.scp ]; then
+      local/make_symlink_dir.sh --tmp-root $storage data/${x}/${fbankdir}
+      steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 200 data/${x}/{,log,$fbankdir}
+      ./utils/fix_data_dir.sh data/${x}
+      fi
+  done
+
+  # compute global CMVN
+  compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
+  ./utils/fix_data_dir.sh data/${train_set} 
+
 
     if [ ! -z $subset_num_spk ]; then
         # create a trainng subset with ${subset_num_spk} speakers (in total 7470)
@@ -184,18 +201,22 @@ if [ ${stage} -le 1 ]; then
 
     # remove utt having more than 3000 frames or less than 10 frames or
     # remove utt having more than 400 characters or no more than 0 characters
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_dev}_org data/${train_dev}
+    #remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
+    #remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_dev}_org data/${train_dev}
     
     # compute global CMVN
-    compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
+    #compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
 
     # dump features for training
     if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_tr_dir}/storage ]; then
     utils/create_split_dir.pl \
         /export/b{01,02,03,04}/${USER}/espnet-data/egs/jsalt18e2e/asr1/dump/${train_set}/delta${do_delta}/storage \
         ${feat_tr_dir}/storage
+    elif [[ $(hostname -f) == *.fit.vutbr.cz ]]; then
+    local/make_symlink_dir.sh --tmp-root $storage ${feat_tr_dir}
+    local/make_symlink_dir.sh --tmp-root $storage ${feat_dt_dir}
     fi
+
     if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_dt_dir}/storage ]; then
     utils/create_split_dir.pl \
         /export/b{01,02,03,04}/${USER}/espnet-data/egs/jsalt18e2e/asr1/dump/${train_dev}/delta${do_delta}/storage \
@@ -205,6 +226,7 @@ if [ ${stage} -le 1 ]; then
         data/${train_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/${train_set}_${train_set} ${feat_tr_dir}
     [ ! -d ${feat_dt_dir}/feats.scp ] && dump.sh --cmd "$train_cmd" --nj 40 --do_delta $do_delta \
         data/${train_dev}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/${train_dev}_${train_set} ${feat_dt_dir}
+over
    for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}_${train_set}/delta${do_delta}; mkdir -p ${feat_recog_dir}
         [ ! -d ${feat_recog_dir}/feats.scp ] && dump.sh --cmd "$train_cmd" --nj 40 --do_delta $do_delta \

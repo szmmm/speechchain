@@ -260,3 +260,4 @@ def test_calculate_all_attentions(module, atype):
     with chainer.no_backprop_mode():
         att_ws = model.calculate_all_attentions(data)
         print(att_ws.shape)
+
