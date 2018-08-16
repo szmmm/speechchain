@@ -79,9 +79,7 @@ recog_set="dt_babel_assamese et_babel_assamese dt_babel_tagalog et_babel_tagalog
 # whole set
 recog_set="dt_babel_cantonese et_babel_cantonese dt_babel_assamese et_babel_assamese dt_babel_bengali et_babel_bengali dt_babel_pashto et_babel_pashto dt_babel_turkish et_babel_turkish\
  dt_babel_vietnamese et_babel_vietnamese dt_babel_haitian et_babel_haitian dt_babel_swahili et_babel_swahili dt_babel_lao et_babel_lao dt_babel_tagalog et_babel_tagalog\
- dt_babel_tamil et_babel_tamil dt_babel_kurmanji et_babel_kurmanji dt_babel_zulu et_babel_zulu dt_babel_tokpisin et_babel_tokpisin dt_babel_georgian et_babel_georgian\
- dt_csj_japanese et_csj_japanese_1 et_csj_japanese_2 et_csj_japanese_3\
- dt_libri_english_clean dt_libri_english_other et_libri_english_clean et_libri_english_other"
+ dt_babel_tamil et_babel_tamil dt_babel_zulu et_babel_zulu dt_babel_tokpisin et_babel_tokpisin dt_babel_georgian et_babel_georgian"
 
 # subset options
 # select the number of speakers for subset training experiments. (e.g. 1000; select 1000 speakers). Default: select the whole train set.
@@ -177,7 +175,7 @@ if [ ${stage} -le 1 ]; then
     #utils/combine_data.sh data/tr_babel10_org data/tr_babel_cantonese data/tr_babel_bengali data/tr_babel_pashto data/tr_babel_turkish data/tr_babel_vietnamese data/tr_babel_haitian data/tr_babel_tamil data/tr_babel_kurmanji data/tr_babel_tokpisin data/tr_babel_georgian
     #utils/combine_data.sh data/dt_babel10_org data/dt_babel_cantonese data/dt_babel_bengali data/dt_babel_pashto data/dt_babel_turkish data/dt_babel_vietnamese data/dt_babel_haitian data/dt_babel_tamil data/dt_babel_kurmanji data/dt_babel_tokpisin data/dt_babel_georgian
   fbankdir=fbank
-  <<"over"
+  
   for x in ${train_set} ${train_dev}; do
       if [ ! -f data/${x}/featss.scp ]; then
       local/make_symlink_dir.sh --tmp-root $storage data/${x}/${fbankdir}
@@ -226,7 +224,7 @@ if [ ${stage} -le 1 ]; then
         data/${train_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/${train_set}_${train_set} ${feat_tr_dir}
     [ ! -d ${feat_dt_dir}/feats.scp ] && dump.sh --cmd "$train_cmd" --nj 40 --do_delta $do_delta \
         data/${train_dev}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/${train_dev}_${train_set} ${feat_dt_dir}
-over
+
    for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}_${train_set}/delta${do_delta}; mkdir -p ${feat_recog_dir}
         [ ! -d ${feat_recog_dir}/feats.scp ] && dump.sh --cmd "$train_cmd" --nj 40 --do_delta $do_delta \
@@ -234,6 +232,7 @@ over
             ${feat_recog_dir}
     done
 fi
+
 dict=data/lang_1char/train_units.txt
 nlsyms=data/lang_1char/non_lang_syms.txt
 
