@@ -312,9 +312,9 @@ if [ ${stage} -le 4 ]; then
 
     for rtask in ${recog_set}; do
     (
-        decode_dir=decode_${rtask}_beam${beam_size}_e${recog_model}_p${penalty}_len${minlenratio}-${maxlenratio}_ctcw${ctc_weight}
+        decode_dir=decode_${rtask}_beam${beam_size}_e${recog_model}_p${penalty}_len${minlenratio}-${maxlenratio}_ctcw${ctc_weight}_${RANDOM}
         feat_recog_dir=${dumpdir}/${rtask}_${train_set}/delta${do_delta}
-
+        echo $rtask
         # split data
         splitjson.py --parts ${nj} ${feat_recog_dir}/data.json
 
