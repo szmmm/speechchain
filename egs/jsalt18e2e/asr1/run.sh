@@ -80,7 +80,7 @@ recog_set="dt_babel_assamese et_babel_assamese dt_babel_tagalog et_babel_tagalog
 recog_set="dt_babel_cantonese et_babel_cantonese dt_babel_assamese et_babel_assamese dt_babel_bengali et_babel_bengali dt_babel_pashto et_babel_pashto dt_babel_turkish et_babel_turkish\
  dt_babel_vietnamese et_babel_vietnamese dt_babel_haitian et_babel_haitian dt_babel_swahili et_babel_swahili dt_babel_lao et_babel_lao dt_babel_tagalog et_babel_tagalog\
  dt_babel_tamil et_babel_tamil dt_babel_zulu et_babel_zulu dt_babel_tokpisin et_babel_tokpisin dt_babel_georgian et_babel_georgian"
-
+recog_set="et_babel_tamil et_babel_tokpisin et_babel_kurmanji"
 # subset options
 # select the number of speakers for subset training experiments. (e.g. 1000; select 1000 speakers). Default: select the whole train set.
 subset_num_spk=""
@@ -238,6 +238,7 @@ nlsyms=data/lang_1char/non_lang_syms.txt
 
 echo "dictionary: ${dict}"
 if [ ${stage} -le 2 ]; then
+    false && {
     ### Task dependent. You have to check non-linguistic symbols used in the corpus.
     echo "stage 2: Dictionary and Json Data Preparation"
     mkdir -p data/lang_1char/
@@ -256,6 +257,7 @@ if [ ${stage} -le 2 ]; then
          data/${train_set} ${dict} > ${feat_tr_dir}/data.json
     data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms} \
          data/${train_dev} ${dict} > ${feat_dt_dir}/data.json
+    }   
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}_${train_set}/delta${do_delta}
         data2json.sh --feat ${feat_recog_dir}/feats.scp \

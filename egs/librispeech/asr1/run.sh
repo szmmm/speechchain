@@ -16,6 +16,7 @@ dumpdir=dump   # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
 resume=        # Resume the training from snapshot
+storage=/mnt/scratch06/tmp/baskar/espnet/$RANDOM
 
 # feature configuration
 do_delta=false # true when using CNN
@@ -112,44 +113,57 @@ if [ ${stage} -le 0 ]; then
     done
 fi
 
-feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
-feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; mkdir -p ${feat_dt_dir}
+feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; #mkdir -p ${feat_tr_dir}
+feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; #mkdir -p ${feat_dt_dir}
+local/make_symlink_dir.sh --tmp-root $storage ${feat_tr_dir}
+local/make_symlink_dir.sh --tmp-root $storage ${feat_dt_dir}
 if [ ${stage} -le 1 ]; then
     ### Task dependent. You have to design training and dev sets by yourself.
     ### But you can utilize Kaldi recipes in most cases
     echo "stage 1: Feature Generation"
     fbankdir=fbank
+    local/make_symlink_dir.sh --tmp-root $storage ${fbankdir}
     # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
     for x in dev_clean test_clean dev_other test_other train_clean_100 train_clean_360 train_other_500; do
-        steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 32 data/${x} exp/make_fbank/${x} ${fbankdir}
+        if [ ! -s data/${x}/feats.scp ]; then
+            steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 32 data/${x} exp/make_fbank/${x} ${fbankdir}
+        fi
     done
 
-    utils/combine_data.sh data/${train_set}_org data/train_clean_100 data/train_clean_360 data/train_other_500
-    utils/combine_data.sh data/${train_dev}_org data/dev_clean data/dev_other
+    if [ ! -s data/${train_dev}_org/feats.scp ]; then
+        utils/combine_data.sh data/${train_set}_org data/train_clean_100 data/train_clean_360 data/train_other_500
+        utils/combine_data.sh data/${train_dev}_org data/dev_clean data/dev_other
+    fi
 
-    # remove utt having more than 3000 frames
-    # remove utt having more than 400 characters
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_dev}_org data/${train_dev}
+    if [ ! -s data/${train_dev}/feats.scp ]; then
+        # remove utt having more than 3000 frames
+        # remove utt having more than 400 characters
+        remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
+        remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_dev}_org data/${train_dev}
+    fi
 
-    # compute global CMVN
-    compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
+    if [ ! -s data/${train_set}/cmvn.ark ]; then 
+        # compute global CMVN
+        compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
+    fi
 
     # dump features for training
-    if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_tr_dir}/storage ]; then
-    utils/create_split_dir.pl \
-        /export/b{14,15,16,17}/${USER}/espnet-data/egs/librispeech/asr1/dump/${train_set}/delta${do_delta}/storage \
-        ${feat_tr_dir}/storage
-    fi
-    if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_dt_dir}/storage ]; then
-    utils/create_split_dir.pl \
-        /export/b{14,15,16,17}/${USER}/espnet-data/egs/librispeech/asr1/dump/${train_dev}/delta${do_delta}/storage \
-        ${feat_dt_dir}/storage
-    fi
+    #if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_tr_dir}/storage ]; then
+    #utils/create_split_dir.pl \
+    #    /export/b{14,15,16,17}/${USER}/espnet-data/egs/librispeech/asr1/dump/${train_set}/delta${do_delta}/storage \
+    #    ${feat_tr_dir}/storage
+    #fi
+    #if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_dt_dir}/storage ]; then
+    #utils/create_split_dir.pl \
+    #    /export/b{14,15,16,17}/${USER}/espnet-data/egs/librispeech/asr1/dump/${train_dev}/delta${do_delta}/storage \
+    #    ${feat_dt_dir}/storage
+    #fi
+
     dump.sh --cmd "$train_cmd" --nj 80 --do_delta $do_delta \
         data/${train_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train ${feat_tr_dir}
     dump.sh --cmd "$train_cmd" --nj 32 --do_delta $do_delta \
         data/${train_dev}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
+
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_recog_dir}
         dump.sh --cmd "$train_cmd" --nj 32 --do_delta $do_delta \
@@ -170,14 +184,23 @@ if [ ${stage} -le 2 ]; then
     wc -l ${dict}
 
     # make json labels
-    data2json.sh --feat ${feat_tr_dir}/feats.scp \
-         data/${train_set} ${dict} > ${feat_tr_dir}/data.json
-    data2json.sh --feat ${feat_dt_dir}/feats.scp \
-         data/${train_dev} ${dict} > ${feat_dt_dir}/data.json
-for rtask in ${recog_set}; do
+    echo "data2json.sh --feat ${feat_tr_dir}/feats.scp \
+         data/${train_set} ${dict} > ${feat_tr_dir}/data.json" > ${feat_tr_dir}/sge
+    chmod +x ${feat_tr_dir}/sge
+    $train_cmd ${feat_tr_dir}/log ${feat_tr_dir}/sge
+
+    echo "data2json.sh --feat ${feat_dt_dir}/feats.scp \
+         data/${train_dev} ${dict} > ${feat_dt_dir}/data.json" > ${feat_dt_dir}/sge
+    chmod +x ${feat_dt_dir}/sge
+    $train_cmd ${feat_dt_dir}/log ${feat_dt_dir}/sge
+
+    for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
-        data2json.sh --feat ${feat_recog_dir}/feats.scp \
-            data/${rtask} ${dict} > ${feat_recog_dir}/data.json
+
+        echo "data2json.sh --feat ${feat_recog_dir}/feats.scp \
+            data/${rtask} ${dict} > ${feat_recog_dir}/data.json" > ${feat_recog_dir}/sge
+        chmod +x ${feat_recog_dir}/sge
+        $train_cmd ${feat_recog_dir}/log ${feat_recog_dir}/sge
     done
 fi
 

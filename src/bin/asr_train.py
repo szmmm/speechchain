@@ -162,6 +162,8 @@ def main():
                         help='Gradient norm threshold to clip')
     parser.add_argument('--num-save-attention', default=3, type=int,
                         help='Number of samples of attention to be saved')
+    parser.add_argument('--save-epoch', default=False, type=bool,
+                        help='Save pytorch model for each epoch')
     args = parser.parse_args()
 
     # logging info

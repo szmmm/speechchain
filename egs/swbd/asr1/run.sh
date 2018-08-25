@@ -16,6 +16,7 @@ dumpdir=dump   # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
 resume=        # Resume the training from snapshot
+storage=/mnt/scratch06/tmp/baskar/espnet/$RANDOM
 
 # feature configuration
 do_delta=false # true when using CNN
@@ -58,6 +59,10 @@ recog_model=acc.best # set a model to be used for decoding: 'acc.best' or 'loss.
 swbd1_dir=/export/corpora3/LDC/LDC97S62
 eval2000_dir="/export/corpora2/LDC/LDC2002S09/hub5e_00 /export/corpora2/LDC/LDC2002T43"
 rt03_dir=/export/corpora/LDC/LDC2007S10
+# BUT data
+swbd1_dir=/mnt/matylda2/data/SWITCHBOARD_1R2
+eval2000_dir="/mnt/matylda2/data/HUB5_2000/ /mnt/matylda2/data/HUB5_2000/2000_hub5_eng_eval_tr"
+#rt03_dir=/export/corpora/LDC/LDC2007S10
 
 # exp tag
 tag="" # tag for managing experiments.
@@ -86,7 +91,8 @@ set -o pipefail
 
 train_set=train_nodup
 train_dev=train_dev
-recog_set="train_dev eval2000 rt03"
+recog_set="train_dev eval2000"
+# rt03"
 
 if [ ${stage} -le 0 ]; then
     ### Task dependent. You have to make data the following preparation part by yourself.
@@ -96,9 +102,10 @@ if [ ${stage} -le 0 ]; then
     local/swbd1_prepare_dict.sh
     local/swbd1_data_prep.sh ${swbd1_dir}
     local/eval2000_data_prep.sh ${eval2000_dir}
-    local/rt03_data_prep.sh ${rt03_dir}
+    #local/rt03_data_prep.sh ${rt03_dir}
     # upsample audio from 8k to 16k to make a recipe consistent with others
-    for x in train eval2000 rt03; do
+    #for x in train eval2000 rt03; do
+    for x in train eval2000; do
 	sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
     done
     # normalize eval2000 ant rt03 texts by
@@ -106,7 +113,8 @@ if [ ${stage} -le 0 ]; then
     # 2) remove tags (%AH) (%HESITATION) (%UH)
     # 3) remove <B_ASIDE> <E_ASIDE>
     # 4) remove "(" or ")"
-    for x in eval2000 rt03; do
+    #for x in eval2000 rt03; do
+    for x in eval2000; do
         cp data/${x}/text data/${x}/text.org
         paste -d "" \
             <(cut -f 1 -d" " data/${x}/text.org) \
@@ -116,15 +124,20 @@ if [ ${stage} -le 0 ]; then
     done
 fi
 
-feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
-feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; mkdir -p ${feat_dt_dir}
+feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; #mkdir -p ${feat_tr_dir}
+feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; #mkdir -p ${feat_dt_dir}
+local/make_symlink_dir.sh --tmp-root $storage ${feat_tr_dir}
+local/make_symlink_dir.sh --tmp-root $storage ${feat_dt_dir}
+
 if [ ${stage} -le 1 ]; then
     ### Task dependent. You have to design training and dev sets by yourself.
     ### But you can utilize Kaldi recipes in most cases
     echo "stage 1: Feature Generation"
     fbankdir=fbank
+    local/make_symlink_dir.sh --tmp-root $storage ${fbankdir}
     # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
-    for x in train eval2000 rt03; do
+    #for x in train eval2000 rt03; do
+    for x in train eval2000; do
         steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 32 data/${x} exp/make_fbank/${x} ${fbankdir}
     done
 
