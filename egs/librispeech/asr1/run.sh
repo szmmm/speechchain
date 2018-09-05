@@ -113,10 +113,10 @@ if [ ${stage} -le 0 ]; then
     done
 fi
 
-feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; #mkdir -p ${feat_tr_dir}
-feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; #mkdir -p ${feat_dt_dir}
-local/make_symlink_dir.sh --tmp-root $storage ${feat_tr_dir}
-local/make_symlink_dir.sh --tmp-root $storage ${feat_dt_dir}
+local/make_symlink_dir.sh --tmp-root $storage ${dumpdir}
+feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
+feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; mkdir -p ${feat_dt_dir}
+
 if [ ${stage} -le 1 ]; then
     ### Task dependent. You have to design training and dev sets by yourself.
     ### But you can utilize Kaldi recipes in most cases
