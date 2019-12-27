@@ -79,7 +79,7 @@ def load_tacotron_loss(tts_model_conf, tts_model_file, args, reporter=None):
         with open(tts_model_conf, 'rb') as f:
             idim_taco, odim_taco, train_args_taco = pickle.load(f)
     elif 'json' in tts_model_conf:
-        from espnet.asr.asrtts_utils import get_model_conf
+        from espnet.asr.asr_utils import get_model_conf
         idim_taco, odim_taco, train_args_taco = get_model_conf(tts_model_file, conf_path=tts_model_conf)
     if args.modify_output:
         import json

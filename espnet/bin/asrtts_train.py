@@ -423,7 +423,7 @@ def main(cmd_args):
             from espnet.asr.chainer_backend.asr import train
             train(args)
         elif args.backend == "pytorch":
-            from espnet.asr.pytorch_backend.asr import train
+            from espnet.asr.pytorch_backend.asrtts import train
             train(args)
         else:
             raise ValueError("Only chainer and pytorch are supported.")
