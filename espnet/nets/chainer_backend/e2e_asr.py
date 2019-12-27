@@ -1,8 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# encoding: utf-8
 
 # Copyright 2017 Johns Hopkins University (Shinji Watanabe)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
+"""RNN sequence-to-sequence speech recognition model (chainer)."""
 
 import logging
 import math
@@ -11,18 +13,42 @@ import chainer
 from chainer import reporter
 import numpy as np
 
-from espnet.nets.asr_interface import ASRInterface
-from espnet.nets.chainer_backend.attentions import att_for
+from espnet.nets.chainer_backend.asr_interface import ChainerASRInterface
 from espnet.nets.chainer_backend.ctc import ctc_for
-from espnet.nets.chainer_backend.decoders import decoder_for
-from espnet.nets.chainer_backend.encoders import encoder_for
+from espnet.nets.chainer_backend.rnn.attentions import att_for
+from espnet.nets.chainer_backend.rnn.decoders import decoder_for
+from espnet.nets.chainer_backend.rnn.encoders import encoder_for
 from espnet.nets.e2e_asr_common import label_smoothing_dist
+from espnet.nets.pytorch_backend.e2e_asr import E2E as E2E_pytorch
 
 CTC_LOSS_THRESHOLD = 10000
 
 
-class E2E(ASRInterface, chainer.Chain):
+class E2E(ChainerASRInterface):
+    """E2E module for chainer backend.
+
+    Args:
+        idim (int): Dimension of the inputs.
+        odim (int): Dimension of the outputs.
+        args (parser.args): Training config.
+        flag_return (bool): If True, train() would return
+            additional metrics in addition to the training
+            loss.
+
+    """
+
+    @staticmethod
+    def add_arguments(parser):
+        """Add arguments."""
+        return E2E_pytorch.add_arguments(parser)
+
     def __init__(self, idim, odim, args, flag_return=True):
+        """Construct an E2E object.
+
+        :param int idim: dimension of inputs
+        :param int odim: dimension of outputs
+        :param Namespace args: argument Namespace containing options
+        """
         chainer.Chain.__init__(self)
         self.mtlalpha = args.mtlalpha
         assert 0 <= self.mtlalpha <= 1, "mtlalpha must be [0,1]"
@@ -71,12 +97,19 @@ class E2E(ASRInterface, chainer.Chain):
         self.flag_return = flag_return
 
     def forward(self, xs, ilens, ys):
-        """E2E forward
+        """E2E forward propagation.
 
-        :param xs:
-        :param ilens:
-        :param ys:
-        :return:
+        Args:
+            xs (chainer.Variable): Batch of padded charactor ids. (B, Tmax)
+            ilens (chainer.Variable): Batch of length of each input batch. (B,)
+            ys (chainer.Variable): Batch of padded target features. (B, Lmax, odim)
+
+        Returns:
+            float: Loss that calculated by attention and ctc loss.
+            float (optional): Ctc loss.
+            float (optional): Attention loss.
+            float (optional): Accuracy.
+
         """
         # 1. encoder
         hs, ilens = self.enc(xs, ilens)
@@ -118,13 +151,17 @@ class E2E(ASRInterface, chainer.Chain):
             return self.loss
 
     def recognize(self, x, recog_args, char_list, rnnlm=None):
-        """E2E greedy/beam search
+        """E2E greedy/beam search.
 
-        :param x:
-        :param recog_args:
-        :param char_list:
-        :param rnnlm:
-        :return:
+        Args:
+            x (chainer.Variable): Input tensor for recognition.
+            recog_args (parser.args): Arguments of config file.
+            char_list (List[str]): List of Charactors.
+            rnnlm (Module): RNNLM module defined at `espnet.lm.chainer_backend.lm`.
+
+        Returns:
+            List[Dict[str, Any]]: Result of recognition.
+
         """
         # subsample frame
         x = x[::self.subsample[0], :]
@@ -149,16 +186,38 @@ class E2E(ASRInterface, chainer.Chain):
             return y
 
     def calculate_all_attentions(self, xs, ilens, ys):
-        """E2E attention calculation
+        """E2E attention calculation.
 
-        :param xs:
-        :param list xs: list of padded input sequences [(T1, idim), (T2, idim), ...]
-        :param np.ndarray ilens: batch of lengths of input sequences (B)
-        :param list ys: list of character id sequence tensor [(L1), (L2), (L3), ...]
-        :return: attention weights (B, Lmax, Tmax)
-        :rtype: float np.ndarray
+        Args:
+            xs (List): List of padded input sequences. [(T1, idim), (T2, idim), ...]
+            ilens (np.ndarray): Batch of lengths of input sequences. (B)
+            ys (List): List of character id sequence tensor. [(L1), (L2), (L3), ...]
+
+        Returns:
+            float np.ndarray: Attention weights. (B, Lmax, Tmax)
+
         """
         hs, ilens = self.enc(xs, ilens)
         att_ws = self.dec.calculate_all_attentions(hs, ys)
 
         return att_ws
+
+    @staticmethod
+    def custom_converter(subsampling_factor=0):
+        """Get customconverter of the model."""
+        from espnet.nets.chainer_backend.rnn.training import CustomConverter
+        return CustomConverter(subsampling_factor=subsampling_factor)
+
+    @staticmethod
+    def custom_updater(iters, optimizer, converter, device=-1, accum_grad=1):
+        """Get custom_updater of the model."""
+        from espnet.nets.chainer_backend.rnn.training import CustomUpdater
+        return CustomUpdater(
+            iters, optimizer, converter=converter, device=device, accum_grad=accum_grad)
+
+    @staticmethod
+    def custom_parallel_updater(iters, optimizer, converter, devices, accum_grad=1):
+        """Get custom_parallel_updater of the model."""
+        from espnet.nets.chainer_backend.rnn.training import CustomParallelUpdater
+        return CustomParallelUpdater(
+            iters, optimizer, converter=converter, devices=devices, accum_grad=accum_grad)

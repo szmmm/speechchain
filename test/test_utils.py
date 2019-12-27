@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import h5py
 import kaldiio
 import numpy as np
@@ -90,6 +90,65 @@ def test_load_inputs_and_targets_legacy_format(tmpdir):
         np.testing.assert_array_equal(y, yd)
 
 
+def test_load_inputs_and_targets_legacy_format_multi_inputs(tmpdir):
+    # batch = [("F01_050C0101_PED_REAL",
+    #          {"input": [{"feat": "some/path1.ark:123",
+    #                      "name": "input1"}
+    #                     {"feat": "some/path2.ark:123"
+    #                      "name": "input2"}],
+    #           "output": [{"tokenid": "1 2 3 4"}],
+    ark_1 = str(tmpdir.join('test_1.ark'))
+    scp_1 = str(tmpdir.join('test_1.scp'))
+
+    ark_2 = str(tmpdir.join('test_2.ark'))
+    scp_2 = str(tmpdir.join('test_2.scp'))
+
+    desire_xs_1 = []
+    desire_xs_2 = []
+    desire_ys = []
+    with kaldiio.WriteHelper('ark,scp:{},{}'.format(ark_1, scp_1)) as f:
+        for i in range(10):
+            x = np.random.random((100, 100)).astype(np.float32)
+            uttid = 'uttid{}'.format(i)
+            f[uttid] = x
+            desire_xs_1.append(x)
+            desire_ys.append(np.array([1, 2, 3, 4]))
+
+    with kaldiio.WriteHelper('ark,scp:{},{}'.format(ark_2, scp_2)) as f:
+        for i in range(10):
+            x = np.random.random((100, 100)).astype(np.float32)
+            uttid = 'uttid{}'.format(i)
+            f[uttid] = x
+            desire_xs_2.append(x)
+            desire_ys.append(np.array([1, 2, 3, 4]))
+
+    batch = []
+    with open(scp_1, 'r') as f:
+        lines_1 = f.readlines()
+    with open(scp_2, 'r') as f:
+        lines_2 = f.readlines()
+
+    for line_1, line_2 in zip(lines_1, lines_2):
+        uttid, path_1 = line_1.strip().split()
+        uttid, path_2 = line_2.strip().split()
+        batch.append((uttid,
+                      {'input': [{'feat': path_1,
+                                  'name': 'input1'},
+                                 {'feat': path_2,
+                                  'name': 'input2'}],
+                       'output': [{'tokenid': '1 2 3 4',
+                                   'name': 'target1'}]}))
+
+    load_inputs_and_targets = LoadInputsAndTargets()
+    xs_1, xs_2, ys = load_inputs_and_targets(batch)
+    for x, xd in zip(xs_1, desire_xs_1):
+        np.testing.assert_array_equal(x, xd)
+    for x, xd in zip(xs_2, desire_xs_2):
+        np.testing.assert_array_equal(x, xd)
+    for y, yd in zip(ys, desire_ys):
+        np.testing.assert_array_equal(y, yd)
+
+
 def test_load_inputs_and_targets_new_format(tmpdir):
     # batch = [("F01_050C0101_PED_REAL",
     #           {"input": [{"feat": "some/path.h5",
@@ -140,3 +199,64 @@ def test_sound_hdf5_file(tmpdir, fmt):
         t, r = f[k]
         assert r == 8000
         np.testing.assert_array_equal(t, v)
+
+
+@pytest.mark.parametrize('typ', ['ctc', 'wer', 'cer', 'all'])
+def test_error_calculator(tmpdir, typ):
+    from espnet.nets.e2e_asr_common import ErrorCalculator
+    space = "<space>"
+    blank = "<blank>"
+    char_list = [blank, space, 'a', 'e', 'i', 'o', 'u']
+    ys_pad = [np.random.randint(0, len(char_list), x) for x in range(120, 150, 5)]
+    ys_hat = [np.random.randint(0, len(char_list), x) for x in range(120, 150, 5)]
+    if typ == 'ctc':
+        cer, wer = False, False
+    elif typ == 'wer':
+        cer, wer = False, True
+    elif typ == 'cer':
+        cer, wer = True, False
+    else:
+        cer, wer = True, True
+
+    ec = ErrorCalculator(char_list, space, blank,
+                         cer, wer)
+
+    if typ == 'ctc':
+        cer_ctc_val = ec(ys_pad, ys_hat, is_ctc=True)
+        _cer, _wer = ec(ys_pad, ys_hat)
+        assert cer_ctc_val is not None
+        assert _cer is None
+        assert _wer is None
+    elif typ == 'wer':
+        _cer, _wer = ec(ys_pad, ys_hat)
+        assert _cer is None
+        assert _wer is not None
+    elif typ == 'cer':
+        _cer, _wer = ec(ys_pad, ys_hat)
+        assert _cer is not None
+        assert _wer is None
+    else:
+        cer_ctc_val = ec(ys_pad, ys_hat, is_ctc=True)
+        _cer, _wer = ec(ys_pad, ys_hat)
+        assert cer_ctc_val is not None
+        assert _cer is not None
+        assert _wer is not None
+
+
+def test_error_calculator_nospace(tmpdir):
+    from espnet.nets.e2e_asr_common import ErrorCalculator
+    space = "<space>"
+    blank = "<blank>"
+    char_list = [blank, 'a', 'e', 'i', 'o', 'u']
+    ys_pad = [np.random.randint(0, len(char_list), x) for x in range(120, 150, 5)]
+    ys_hat = [np.random.randint(0, len(char_list), x) for x in range(120, 150, 5)]
+    cer, wer = True, True
+
+    ec = ErrorCalculator(char_list, space, blank,
+                         cer, wer)
+
+    cer_ctc_val = ec(ys_pad, ys_hat, is_ctc=True)
+    _cer, _wer = ec(ys_pad, ys_hat)
+    assert cer_ctc_val is not None
+    assert _cer is not None
+    assert _wer is not None

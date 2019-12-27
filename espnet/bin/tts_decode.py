@@ -3,6 +3,8 @@
 # Copyright 2018 Nagoya University (Tomoki Hayashi)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
+"""TTS decoding script."""
+
 import configargparse
 import logging
 import os
@@ -10,9 +12,12 @@ import platform
 import subprocess
 import sys
 
+from espnet.utils.cli_utils import strtobool
+
 
 # NOTE: you need this func to generate our sphinx doc
 def get_parser():
+    """Get parser of decoding arguments."""
     parser = configargparse.ArgumentParser(
         description='Synthesize speech from text using a TTS model on one CPU',
         config_file_parser_class=configargparse.YAMLConfigFileParser,
@@ -53,10 +58,22 @@ def get_parser():
                         help='Minimum length ratio in decoding')
     parser.add_argument('--threshold', type=float, default=0.5,
                         help='Threshold value in decoding')
+    parser.add_argument('--use-att-constraint', type=strtobool, default=False,
+                        help='Whether to use the attention constraint')
+    parser.add_argument('--backward-window', type=int, default=1,
+                        help='Backward window size in the attention constraint')
+    parser.add_argument('--forward-window', type=int, default=3,
+                        help='Forward window size in the attention constraint')
+    # save related
+    parser.add_argument('--save-durations', default=False, type=strtobool,
+                        help='Whether to save durations converted from attentions')
+    parser.add_argument('--save-focus-rates', default=False, type=strtobool,
+                        help='Whether to save focus rates of attentions')
     return parser
 
 
 def main(args):
+    """Run deocding."""
     parser = get_parser()
     args = parser.parse_args(args)
 

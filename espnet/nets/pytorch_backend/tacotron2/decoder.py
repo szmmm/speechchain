@@ -4,6 +4,8 @@
 # Copyright 2019 Nagoya University (Tomoki Hayashi)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
+"""Tacotron2 decoder related modules."""
+
 import six
 
 import torch
@@ -24,10 +26,6 @@ class ZoneOutCell(torch.nn.Module):
     This is a module of zoneout described in `Zoneout: Regularizing RNNs by Randomly Preserving Hidden Activations`_.
     This code is modified from `eladhoffer/seq2seq.pytorch`_.
 
-    Args:
-        cell (torch.nn.Module): Pytorch recurrent cell module e.g. `torch.nn.Module.LSTMCell`.
-        zoneout_rate (float, optional): Probability of zoneout from 0.0 to 1.0.
-
     Examples:
         >>> lstm = torch.nn.LSTMCell(16, 32)
         >>> lstm = ZoneOutCell(lstm, 0.5)
@@ -41,6 +39,13 @@ class ZoneOutCell(torch.nn.Module):
     """
 
     def __init__(self, cell, zoneout_rate=0.1):
+        """Initialize zone out cell module.
+
+        Args:
+            cell (torch.nn.Module): Pytorch recurrent cell module e.g. `torch.nn.Module.LSTMCell`.
+            zoneout_rate (float, optional): Probability of zoneout from 0.0 to 1.0.
+
+        """
         super(ZoneOutCell, self).__init__()
         self.cell = cell
         self.hidden_size = cell.hidden_size
@@ -89,14 +94,8 @@ class Prenet(torch.nn.Module):
     Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions`_. The Prenet preforms nonlinear conversion
     of inputs before input to auto-regressive lstm, which helps to learn diagonal attentions.
 
-    Args:
-        idim (int): Dimension of the inputs.
-        odim (int): Dimension of the outputs.
-        n_layers (int, optional): The number of prenet layers.
-        n_units (int, optional): The number of prenet units.
-
     Note:
-        This module alway applies dropout even in evaluation See the detail in _`Natural TTS Synthesis by
+        This module alway applies dropout even in evaluation. See the detail in `Natural TTS Synthesis by
         Conditioning WaveNet on Mel Spectrogram Predictions`_.
 
     .. _`Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions`:
@@ -105,6 +104,15 @@ class Prenet(torch.nn.Module):
     """
 
     def __init__(self, idim, n_layers=2, n_units=256, dropout_rate=0.5):
+        """Initialize prenet module.
+
+        Args:
+            idim (int): Dimension of the inputs.
+            odim (int): Dimension of the outputs.
+            n_layers (int, optional): The number of prenet layers.
+            n_units (int, optional): The number of prenet units.
+
+        """
         super(Prenet, self).__init__()
         self.dropout_rate = dropout_rate
         self.prenet = torch.nn.ModuleList()
@@ -118,10 +126,10 @@ class Prenet(torch.nn.Module):
         """Calculate forward propagation.
 
         Args:
-            x (Tensor): Batch of input tensors (B, *, idim).
+            x (Tensor): Batch of input tensors (B, ..., idim).
 
         Returns:
-            Tensor: Batch of output tensors (B, *, odim).
+            Tensor: Batch of output tensors (B, ..., odim).
 
         """
         for l in six.moves.range(len(self.prenet)):
@@ -136,22 +144,24 @@ class Postnet(torch.nn.Module):
     Conditioning WaveNet on Mel Spectrogram Predictions`_. The Postnet predicts refines the predicted
     Mel-filterbank of the decoder, which helps to compensate the detail sturcture of spectrogram.
 
-    Args:
-        idim (int): Dimension of the inputs.
-        odim (int): Dimension of the outputs.
-        n_layers (int, optional): The number of layers.
-        n_filts (int, optional): The number of filter size.
-        n_units (int, optional): The number of filter channels.
-        use_batch_norm (bool, optional): Whether to use batch normalization..
-        dropout_rate (float, optional): Dropout rate..
-
-
     .. _`Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions`:
        https://arxiv.org/abs/1712.05884
 
     """
 
     def __init__(self, idim, odim, n_layers=5, n_chans=512, n_filts=5, dropout_rate=0.5, use_batch_norm=True):
+        """Initialize postnet module.
+
+        Args:
+            idim (int): Dimension of the inputs.
+            odim (int): Dimension of the outputs.
+            n_layers (int, optional): The number of layers.
+            n_filts (int, optional): The number of filter size.
+            n_units (int, optional): The number of filter channels.
+            use_batch_norm (bool, optional): Whether to use batch normalization..
+            dropout_rate (float, optional): Dropout rate..
+
+        """
         super(Postnet, self).__init__()
         self.postnet = torch.nn.ModuleList()
         for layer in six.moves.range(n_layers - 1):
@@ -205,25 +215,6 @@ class Decoder(torch.nn.Module):
     Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions`_. The decoder generates the sequence of
     features from the sequence of the hidden states.
 
-    Args:
-        idim (int): Dimension of the inputs.
-        odim (int): Dimension of the outputs.
-        att (torch.nn.Module): Instance of attention class.
-        dlayers (int, optional): The number of decoder lstm layers.
-        dunits (int, optional): The number of decoder lstm units.
-        prenet_layers (int, optional): The number of prenet layers.
-        prenet_units (int, optional): The number of prenet units.
-        postnet_layers (int, optional): The number of postnet layers.
-        postnet_filts (int, optional): The number of postnet filter size.
-        postnet_chans (int, optional): The number of postnet filter channels.
-        output_activation_fn (torch.nn.Module, optional): Activation function for outputs.
-        cumulate_att_w (bool, optional): Whether to cumulate previous attention weight.
-        use_batch_norm (bool, optional): Whether to use batch normalization.
-        use_concate (bool, optional): Whether to concatenate encoder embedding with decoder lstm outputs.
-        dropout_rate (float, optional): Dropout rate.
-        zoneout_rate (float, optional): Zoneout rate.
-        reduction_factor (int, optional): Reduction factor.
-
     .. _`Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions`:
        https://arxiv.org/abs/1712.05884
 
@@ -244,6 +235,28 @@ class Decoder(torch.nn.Module):
                  dropout_rate=0.5,
                  zoneout_rate=0.1,
                  reduction_factor=1):
+        """Initialize Tacotron2 decoder module.
+
+        Args:
+            idim (int): Dimension of the inputs.
+            odim (int): Dimension of the outputs.
+            att (torch.nn.Module): Instance of attention class.
+            dlayers (int, optional): The number of decoder lstm layers.
+            dunits (int, optional): The number of decoder lstm units.
+            prenet_layers (int, optional): The number of prenet layers.
+            prenet_units (int, optional): The number of prenet units.
+            postnet_layers (int, optional): The number of postnet layers.
+            postnet_filts (int, optional): The number of postnet filter size.
+            postnet_chans (int, optional): The number of postnet filter channels.
+            output_activation_fn (torch.nn.Module, optional): Activation function for outputs.
+            cumulate_att_w (bool, optional): Whether to cumulate previous attention weight.
+            use_batch_norm (bool, optional): Whether to use batch normalization.
+            use_concate (bool, optional): Whether to concatenate encoder embedding with decoder lstm outputs.
+            dropout_rate (float, optional): Dropout rate.
+            zoneout_rate (float, optional): Zoneout rate.
+            reduction_factor (int, optional): Reduction factor.
+
+        """
         super(Decoder, self).__init__()
 
         # store the hyperparameters
@@ -388,7 +401,8 @@ class Decoder(torch.nn.Module):
 
         return after_outs, before_outs, logits, att_ws
 
-    def inference(self, h, threshold=0.5, minlenratio=0.0, maxlenratio=10.0):
+    def inference(self, h, threshold=0.5, minlenratio=0.0, maxlenratio=10.0,
+                  use_att_constraint=False, backward_window=None, forward_window=None):
         """Generate the sequence of features given the sequences of characters.
 
         Args:
@@ -398,6 +412,9 @@ class Decoder(torch.nn.Module):
                 the minimum length of outputs will be 10 * 1 = 10.
             minlenratio (float, optional): Minimum length ratio. If set to 10 and the length of input is 10,
                 the maximum length of outputs will be 10 * 10 = 100.
+            use_att_constraint (bool): Whether to apply attention constraint introduced in `Deep Voice 3`_.
+            backward_window (int): Backward window size in attention constraint.
+            forward_window (int): Forward window size in attention constraint.
 
         Returns:
             Tensor: Output sequence of features (L, odim).
@@ -406,6 +423,8 @@ class Decoder(torch.nn.Module):
 
         Note:
             This computation is performed in auto-regressive manner.
+
+        .. _`Deep Voice 3`: https://arxiv.org/abs/1710.07654
 
         """
         # setup
@@ -427,6 +446,12 @@ class Decoder(torch.nn.Module):
         prev_att_w = None
         self.att.reset()
 
+        # setup for attention constraint
+        if use_att_constraint:
+            last_attended_idx = 0
+        else:
+            last_attended_idx = None
+
         # loop for an output sequence
         idx = 0
         outs, att_ws, probs = [], [], []
@@ -436,9 +461,16 @@ class Decoder(torch.nn.Module):
 
             # decoder calculation
             if self.use_att_extra_inputs:
-                att_c, att_w = self.att(hs, ilens, z_list[0], prev_att_w, prev_out)
+                att_c, att_w = self.att(hs, ilens, z_list[0], prev_att_w, prev_out,
+                                        last_attended_idx=last_attended_idx,
+                                        backward_window=backward_window,
+                                        forward_window=forward_window)
             else:
-                att_c, att_w = self.att(hs, ilens, z_list[0], prev_att_w)
+                att_c, att_w = self.att(hs, ilens, z_list[0], prev_att_w,
+                                        last_attended_idx=last_attended_idx,
+                                        backward_window=backward_window,
+                                        forward_window=forward_window)
+
             att_ws += [att_w]
             prenet_out = self.prenet(prev_out) if self.prenet is not None else prev_out
             xs = torch.cat([att_c, prenet_out], dim=1)
@@ -457,6 +489,8 @@ class Decoder(torch.nn.Module):
                 prev_att_w = prev_att_w + att_w  # Note: error when use +=
             else:
                 prev_att_w = att_w
+            if use_att_constraint:
+                last_attended_idx = int(att_w.argmax())
 
             # check whether to finish generation
             if int(sum(probs[-1] >= threshold)) > 0 or idx >= maxlen:

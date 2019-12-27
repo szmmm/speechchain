@@ -3,8 +3,8 @@
 # Copyright 2018 Kyoto University (Hirofumi Inaguma)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
-. ./path.sh
-. ./cmd.sh
+. ./path.sh || exit 1;
+. ./cmd.sh || exit 1;
 
 # general configuration
 backend=pytorch # chainer or pytorch
@@ -24,7 +24,7 @@ train_config=conf/train.yaml
 decode_config=conf/decode.yaml
 
 # decoding parameter
-recog_model=model.acc.best # set a model to be used for decoding: 'model.acc.best' or 'model.loss.best'
+trans_model=model.acc.best # set a model to be used for decoding: 'model.acc.best' or 'model.loss.best'
 
 # pre-training related
 asr_model=
@@ -38,8 +38,8 @@ case=lc
 
 # Set this to somewhere where you want to put your data, or where
 # someone else has already put it.
-datadir=/n/sd3/inaguma/corpus/libri_french/data
-# libri_french
+datadir=/n/rd11/corpora_8/libri_trans/
+# libri_trans
 #  |_ train/
 #  |_ other/
 #  |_ dev/
@@ -52,9 +52,6 @@ tag="" # tag for managing experiments.
 
 . utils/parse_options.sh || exit 1;
 
-. ./path.sh
-. ./cmd.sh
-
 # Set bash to 'debug' mode, it will exit on :
 # -e 'error', -u 'undefined variable', -o ... 'error in pipeline', -x 'print commands',
 set -e
@@ -64,7 +61,7 @@ set -o pipefail
 train_set=train_sp.fr
 train_set_prefix=train_sp
 train_dev=train_dev.fr
-recog_set="dev.fr test.fr"
+trans_set="dev.fr test.fr"
 
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     ### Task dependent. You have to make data the following preparation part by yourself.
@@ -132,9 +129,9 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 
         # Match the number of utterances between source and target languages
         # extract commocn lines
-        cut -f -1 -d " " data/${x}.en.tmp/text > data/${x}.fr.tmp/reclist1
-        cut -f -1 -d " " data/${x}.fr.tmp/text > data/${x}.fr.tmp/reclist2
-        cut -f -1 -d " " data/${x}.fr.gtranslate.tmp/text > data/${x}.fr.tmp/reclist3
+        cut -f 1 -d " " data/${x}.en.tmp/text > data/${x}.fr.tmp/reclist1
+        cut -f 1 -d " " data/${x}.fr.tmp/text > data/${x}.fr.tmp/reclist2
+        cut -f 1 -d " " data/${x}.fr.gtranslate.tmp/text > data/${x}.fr.tmp/reclist3
         comm -12 data/${x}.fr.tmp/reclist1 data/${x}.fr.tmp/reclist2 > data/${x}.fr.tmp/reclist4
         comm -12 data/${x}.fr.tmp/reclist3 data/${x}.fr.tmp/reclist4 > data/${x}.fr.tmp/reclist
 
@@ -163,11 +160,11 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         data/${train_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/${train_set} ${feat_tr_dir}
     dump.sh --cmd "$train_cmd" --nj 32 --do_delta $do_delta \
         data/${train_dev}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/${train_dev} ${feat_dt_dir}
-    for rtask in ${recog_set}; do
-        feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_recog_dir}
+    for ttask in ${trans_set}; do
+        feat_trans_dir=${dumpdir}/${ttask}/delta${do_delta}; mkdir -p ${feat_trans_dir}
         dump.sh --cmd "$train_cmd" --nj 32 --do_delta $do_delta \
-            data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/recog/${rtask} \
-            ${feat_recog_dir}
+            data/${ttask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/trans/${ttask} \
+            ${feat_trans_dir}
     done
 fi
 
@@ -196,19 +193,19 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
         data/${train_set_prefix}.fr.gtranslate ${dict} > ${feat_tr_dir}/data_gtranslate.${case}.json
     local/data2json.sh --feat ${feat_dt_dir}/feats.scp --text data/${train_dev}/text.${case} --nlsyms ${nlsyms} \
         data/${train_dev} ${dict} > ${feat_dt_dir}/data.${case}.json
-    for rtask in ${recog_set}; do
-        feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
-        local/data2json.sh --feat ${feat_recog_dir}/feats.scp --text data/${rtask}/text.${case} --nlsyms ${nlsyms} \
-            data/${rtask} ${dict} > ${feat_recog_dir}/data.${case}.json
+    for ttask in ${trans_set}; do
+        feat_trans_dir=${dumpdir}/${ttask}/delta${do_delta}
+        local/data2json.sh --feat ${feat_trans_dir}/feats.scp --text data/${ttask}/text.${case} --nlsyms ${nlsyms} \
+            data/${ttask} ${dict} > ${feat_trans_dir}/data.${case}.json
     done
 
     # update json (add source references)
-    local/update_json.sh --text data/"$(echo ${train_set} | cut -f -1 -d ".")".en/text.${case} --nlsyms ${nlsyms} \
-        ${feat_tr_dir}/data.${case}.json data/"$(echo ${train_set} | cut -f -1 -d ".")".en ${dict}
-    local/update_json.sh --text data/"$(echo ${train_set} | cut -f -1 -d ".")".en/text.${case} --nlsyms ${nlsyms} \
-        ${feat_tr_dir}/data_gtranslate.${case}.json data/"$(echo ${train_set} | cut -f -1 -d ".")".en ${dict}
-    local/update_json.sh --text data/"$(echo ${train_dev} | cut -f -1 -d ".")".en/text.${case} --nlsyms ${nlsyms} \
-        ${feat_dt_dir}/data.${case}.json data/"$(echo ${train_dev} | cut -f -1 -d ".")".en ${dict}
+    local/update_json.sh --text data/"$(echo ${train_set} | cut -f 1 -d ".")".en/text.${case} --nlsyms ${nlsyms} \
+        ${feat_tr_dir}/data.${case}.json data/"$(echo ${train_set} | cut -f 1 -d ".")".en ${dict}
+    local/update_json.sh --text data/"$(echo ${train_set} | cut -f 1 -d ".")".en/text.${case} --nlsyms ${nlsyms} \
+        ${feat_tr_dir}/data_gtranslate.${case}.json data/"$(echo ${train_set} | cut -f 1 -d ".")".en ${dict}
+    local/update_json.sh --text data/"$(echo ${train_dev} | cut -f 1 -d ".")".en/text.${case} --nlsyms ${nlsyms} \
+        ${feat_dt_dir}/data.${case}.json data/"$(echo ${train_dev} | cut -f 1 -d ".")".en ${dict}
 
     # concatenate Fr and Fr (Google translation) jsons
     local/concat_json_multiref.py \
@@ -239,7 +236,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: Network Training"
 
     ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log \
-        asr_train.py \
+        st_train.py \
         --config ${train_config} \
         --ngpu ${ngpu} \
         --backend ${backend} \
@@ -253,7 +250,9 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         --verbose ${verbose} \
         --resume ${resume} \
         --train-json ${feat_tr_dir}/data_2ref.${case}.json \
-        --valid-json ${feat_dt_dir}/data.${case}.json
+        --valid-json ${feat_dt_dir}/data.${case}.json \
+        --enc-init ${asr_model} \
+        --dec-init ${mt_model}
 fi
 
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
@@ -261,26 +260,26 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     nj=16
 
     pids=() # initialize pids
-    for rtask in ${recog_set}; do
+    for ttask in ${trans_set}; do
     (
-        decode_dir=decode_${rtask}_$(basename ${decode_config%.*})
-        feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
+        decode_dir=decode_${ttask}_$(basename ${decode_config%.*})
+        feat_trans_dir=${dumpdir}/${ttask}/delta${do_delta}
 
         # split data
-        splitjson.py --parts ${nj} ${feat_recog_dir}/data.${case}.json
+        splitjson.py --parts ${nj} ${feat_trans_dir}/data.${case}.json
 
         #### use CPU for decoding
         ngpu=0
 
         ${decode_cmd} JOB=1:${nj} ${expdir}/${decode_dir}/log/decode.JOB.log \
-            asr_recog.py \
+            st_trans.py \
             --config ${decode_config} \
             --ngpu ${ngpu} \
             --backend ${backend} \
             --batchsize 0 \
-            --recog-json ${feat_recog_dir}/split${nj}utt/data.JOB.json \
+            --trans-json ${feat_trans_dir}/split${nj}utt/data.JOB.json \
             --result-label ${expdir}/${decode_dir}/data.JOB.json \
-            --model ${expdir}/results/${recog_model}
+            --model ${expdir}/results/${trans_model}
 
         score_bleu.sh --case ${case} --nlsyms ${nlsyms} ${expdir}/${decode_dir} fr ${dict}
 

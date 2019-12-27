@@ -1,7 +1,11 @@
 # Copyright 2019 Shigeki Karita
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+
+"""Transformer speech recognition model (pytorch)."""
+
 from argparse import Namespace
 from distutils.util import strtobool
+
 import logging
 import math
 
@@ -11,37 +15,34 @@ from espnet.nets.asr_interface import ASRInterface
 from espnet.nets.pytorch_backend.ctc import CTC
 from espnet.nets.pytorch_backend.e2e_asr import CTC_LOSS_THRESHOLD
 from espnet.nets.pytorch_backend.e2e_asr import Reporter
-from espnet.nets.pytorch_backend.nets_utils import make_pad_mask
+from espnet.nets.pytorch_backend.nets_utils import make_non_pad_mask
 from espnet.nets.pytorch_backend.nets_utils import th_accuracy
+from espnet.nets.pytorch_backend.transformer.add_sos_eos import add_sos_eos
 from espnet.nets.pytorch_backend.transformer.attention import MultiHeadedAttention
 from espnet.nets.pytorch_backend.transformer.decoder import Decoder
 from espnet.nets.pytorch_backend.transformer.encoder import Encoder
 from espnet.nets.pytorch_backend.transformer.initializer import initialize
 from espnet.nets.pytorch_backend.transformer.label_smoothing_loss import LabelSmoothingLoss
+from espnet.nets.pytorch_backend.transformer.mask import subsequent_mask
+from espnet.nets.pytorch_backend.transformer.mask import target_mask
 from espnet.nets.pytorch_backend.transformer.plot import PlotAttentionReport
-
-
-def subsequent_mask(size, device="cpu", dtype=torch.uint8):
-    """Create mask for subsequent steps (1, size, size)
-
-    :param int size: size of mask
-    :param str device: "cpu" or "cuda" or torch.Tensor.device
-    :param torch.dtype dtype: result dtype
-    :rtype: torch.Tensor
-    >>> subsequent_mask(3)
-    [[1, 0, 0],
-     [1, 1, 0],
-     [1, 1, 1]]
-    """
-    ret = torch.ones(size, size, device=device, dtype=dtype)
-    return torch.tril(ret, out=ret)
+from espnet.nets.scorers.ctc import CTCPrefixScorer
 
 
 class E2E(ASRInterface, torch.nn.Module):
+    """E2E module.
+
+    :param int idim: dimension of inputs
+    :param int odim: dimension of outputs
+    :param Namespace args: argument Namespace containing options
+
+    """
 
     @staticmethod
     def add_arguments(parser):
+        """Add arguments."""
         group = parser.add_argument_group("transformer model setting")
+
         group.add_argument("--transformer-init", type=str, default="pytorch",
                            choices=["pytorch", "xavier_uniform", "xavier_normal",
                                     "kaiming_uniform", "kaiming_normal"],
@@ -57,13 +58,38 @@ class E2E(ASRInterface, torch.nn.Module):
                            help='optimizer warmup steps')
         group.add_argument('--transformer-length-normalized-loss', default=True, type=strtobool,
                            help='normalize loss by length')
+
+        group.add_argument('--dropout-rate', default=0.0, type=float,
+                           help='Dropout rate for the encoder')
+        # Encoder
+        group.add_argument('--elayers', default=4, type=int,
+                           help='Number of encoder layers (for shared recognition part in multi-speaker asr mode)')
+        group.add_argument('--eunits', '-u', default=300, type=int,
+                           help='Number of encoder hidden units')
+        # Attention
+        group.add_argument('--adim', default=320, type=int,
+                           help='Number of attention transformation dimensions')
+        group.add_argument('--aheads', default=4, type=int,
+                           help='Number of heads for multi head attention')
+        # Decoder
+        group.add_argument('--dlayers', default=1, type=int,
+                           help='Number of decoder layers')
+        group.add_argument('--dunits', default=320, type=int,
+                           help='Number of decoder hidden units')
         return parser
 
     @property
     def attention_plot_class(self):
+        """Return PlotAttentionReport."""
         return PlotAttentionReport
 
     def __init__(self, idim, odim, args, ignore_id=-1):
+        """Construct an E2E object.
+
+        :param int idim: dimension of inputs
+        :param int odim: dimension of outputs
+        :param Namespace args: argument Namespace containing options
+        """
         torch.nn.Module.__init__(self)
         if args.transformer_attn_dropout_rate is None:
             args.transformer_attn_dropout_rate = args.dropout_rate
@@ -99,10 +125,8 @@ class E2E(ASRInterface, torch.nn.Module):
         # self.lsm_weight = a
         self.criterion = LabelSmoothingLoss(self.odim, self.ignore_id, args.lsm_weight,
                                             args.transformer_length_normalized_loss)
-        # self.char_list = args.char_list
         # self.verbose = args.verbose
         self.reset_parameters(args)
-        self.recog_args = None  # unused
         self.adim = args.adim
         self.mtlalpha = args.mtlalpha
         if args.mtlalpha > 0.0:
@@ -110,26 +134,22 @@ class E2E(ASRInterface, torch.nn.Module):
         else:
             self.ctc = None
 
+        if args.report_cer or args.report_wer:
+            from espnet.nets.e2e_asr_common import ErrorCalculator
+            self.error_calculator = ErrorCalculator(args.char_list,
+                                                    args.sym_space, args.sym_blank,
+                                                    args.report_cer, args.report_wer)
+        else:
+            self.error_calculator = None
+        self.rnnlm = None
+
     def reset_parameters(self, args):
+        """Initialize parameters."""
         # initialize parameters
         initialize(self, args.transformer_init)
 
-    def add_sos_eos(self, ys_pad):
-        from espnet.nets.pytorch_backend.nets_utils import pad_list
-        eos = ys_pad.new([self.eos])
-        sos = ys_pad.new([self.sos])
-        ys = [y[y != self.ignore_id] for y in ys_pad]  # parse padded ys
-        ys_in = [torch.cat([sos, y], dim=0) for y in ys]
-        ys_out = [torch.cat([y, eos], dim=0) for y in ys]
-        return pad_list(ys_in, self.eos), pad_list(ys_out, self.ignore_id)
-
-    def target_mask(self, ys_in_pad):
-        ys_mask = ys_in_pad != self.ignore_id
-        m = subsequent_mask(ys_mask.size(-1), device=ys_mask.device).unsqueeze(0)
-        return ys_mask.unsqueeze(-2) & m
-
     def forward(self, xs_pad, ilens, ys_pad):
-        '''E2E forward
+        """E2E forward.
 
         :param torch.Tensor xs_pad: batch of padded source sequences (B, Tmax, idim)
         :param torch.Tensor ilens: batch of lengths of source sequences (B)
@@ -140,33 +160,43 @@ class E2E(ASRInterface, torch.nn.Module):
         :rtype: torch.Tensor
         :return: accuracy in attention decoder
         :rtype: float
-        '''
-        # forward encoder
+        """
+        # 1. forward encoder
         xs_pad = xs_pad[:, :max(ilens)]  # for data parallel
-        src_mask = (~make_pad_mask(ilens.tolist())).to(xs_pad.device).unsqueeze(-2)
+        src_mask = make_non_pad_mask(ilens.tolist()).to(xs_pad.device).unsqueeze(-2)
         hs_pad, hs_mask = self.encoder(xs_pad, src_mask)
         self.hs_pad = hs_pad
 
-        # forward decoder
-        ys_in_pad, ys_out_pad = self.add_sos_eos(ys_pad)
-        ys_mask = self.target_mask(ys_in_pad)
+        # 2. forward decoder
+        ys_in_pad, ys_out_pad = add_sos_eos(ys_pad, self.sos, self.eos, self.ignore_id)
+        ys_mask = target_mask(ys_in_pad, self.ignore_id)
         pred_pad, pred_mask = self.decoder(ys_in_pad, ys_mask, hs_pad, hs_mask)
         self.pred_pad = pred_pad
 
-        # compute loss
+        # 3. compute attention loss
         loss_att = self.criterion(pred_pad, ys_out_pad)
         self.acc = th_accuracy(pred_pad.view(-1, self.odim), ys_out_pad,
                                ignore_label=self.ignore_id)
 
-        # TODO(karita) show predected text
+        # TODO(karita) show predicted text
         # TODO(karita) calculate these stats
-        cer, cer_ctc, wer = 0.0, 0.0, 0.0
-        if self.ctc is None:
+        cer_ctc = None
+        if self.mtlalpha == 0.0:
             loss_ctc = None
         else:
             batch_size = xs_pad.size(0)
             hs_len = hs_mask.view(batch_size, -1).sum(1)
             loss_ctc = self.ctc(hs_pad.view(batch_size, -1, self.adim), hs_len, ys_pad)
+            if self.error_calculator is not None:
+                ys_hat = self.ctc.argmax(hs_pad.view(batch_size, -1, self.adim)).data
+                cer_ctc = self.error_calculator(ys_hat.cpu(), ys_pad.cpu(), is_ctc=True)
+
+        # 5. compute cer/wer
+        if self.training or self.error_calculator is None:
+            cer, wer = None, None
+        else:
+            ys_hat = pred_pad.argmax(dim=-1)
+            cer, wer = self.error_calculator(ys_hat.cpu(), ys_pad.cpu())
 
         # copyied from e2e_asr
         alpha = self.mtlalpha
@@ -190,21 +220,33 @@ class E2E(ASRInterface, torch.nn.Module):
             logging.warning('loss (=%f) is not correct', loss_data)
         return self.loss
 
-    def recognize(self, feat, recog_args, char_list=None, rnnlm=None, use_jit=False):
-        '''recognize feat
+    def scorers(self):
+        """Scorers."""
+        return dict(decoder=self.decoder, ctc=CTCPrefixScorer(self.ctc, self.eos))
 
-        :param ndnarray x: input acouctic feature (B, T, D) or (T, D)
-        :param namespace recog_args: argment namespace contraining options
+    def encode(self, x):
+        """Encode acoustic features.
+
+        :param ndarray x: source acoustic feature (T, D)
+        :return: encoder outputs
+        :rtype: torch.Tensor
+        """
+        self.eval()
+        x = torch.as_tensor(x).unsqueeze(0)
+        enc_output, _ = self.encoder(x, None)
+        return enc_output.squeeze(0)
+
+    def recognize(self, x, recog_args, char_list=None, rnnlm=None, use_jit=False):
+        """Recognize input speech.
+
+        :param ndnarray x: input acoustic feature (B, T, D) or (T, D)
+        :param Namespace recog_args: argment Namespace contraining options
         :param list char_list: list of characters
         :param torch.nn.Module rnnlm: language model module
         :return: N-best decoding results
         :rtype: list
-
-        TODO(karita): do not recompute previous attention for faster decoding
-        '''
-        self.eval()
-        feat = torch.as_tensor(feat).unsqueeze(0)
-        enc_output, _ = self.encoder(feat, None)
+        """
+        enc_output = self.encode(x).unsqueeze(0)
         if recog_args.ctc_weight > 0.0:
             lpz = self.ctc.log_softmax(enc_output)
             lpz = lpz.squeeze(0)
@@ -270,10 +312,11 @@ class E2E(ASRInterface, torch.nn.Module):
                 # FIXME: jit does not match non-jit result
                 if use_jit:
                     if traced_decoder is None:
-                        traced_decoder = torch.jit.trace(self.decoder.recognize, (ys, ys_mask, enc_output))
-                    local_att_scores = traced_decoder(ys, ys_mask, enc_output)
+                        traced_decoder = torch.jit.trace(self.decoder.forward_one_step,
+                                                         (ys, ys_mask, enc_output))
+                    local_att_scores = traced_decoder(ys, ys_mask, enc_output)[0]
                 else:
-                    local_att_scores = self.decoder.recognize(ys, ys_mask, enc_output)
+                    local_att_scores = self.decoder.forward_one_step(ys, ys_mask, enc_output)[0]
 
                 if rnnlm:
                     rnnlm_state, local_lm_scores = rnnlm.predict(hyp['rnnlm_prev'], vy)
@@ -371,23 +414,23 @@ class E2E(ASRInterface, torch.nn.Module):
             # should copy becasuse Namespace will be overwritten globally
             recog_args = Namespace(**vars(recog_args))
             recog_args.minlenratio = max(0.0, recog_args.minlenratio - 0.1)
-            return self.recognize(feat, recog_args, char_list, rnnlm)
+            return self.recognize(x, recog_args, char_list, rnnlm)
 
         logging.info('total log probability: ' + str(nbest_hyps[0]['score']))
         logging.info('normalized log probability: ' + str(nbest_hyps[0]['score'] / len(nbest_hyps[0]['yseq'])))
         return nbest_hyps
 
     def calculate_all_attentions(self, xs_pad, ilens, ys_pad):
-        '''E2E attention calculation
+        """E2E attention calculation.
 
         :param torch.Tensor xs_pad: batch of padded input sequences (B, Tmax, idim)
         :param torch.Tensor ilens: batch of lengths of input sequences (B)
-        :param torch.Tensor ys_pad: batch of padded character id sequence tensor (B, Lmax)
+        :param torch.Tensor ys_pad: batch of padded token id sequence tensor (B, Lmax)
         :return: attention weights with the following shape,
             1) multi-head case => attention weights (B, H, Lmax, Tmax),
             2) other case => attention weights (B, Lmax, Tmax).
         :rtype: float ndarray
-        '''
+        """
         with torch.no_grad():
             self.forward(xs_pad, ilens, ys_pad)
         ret = dict()

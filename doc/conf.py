@@ -33,10 +33,12 @@ sys.path.insert(0, os.path.abspath('../utils'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "nbsphinx",
     "sphinx.ext.autodoc",
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
     "sphinxarg.ext",
 ]
 
@@ -202,3 +204,8 @@ texinfo_documents = [
      author, 'ESPnet', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+autoclass_content = 'both'
+
+# NOTE(kan-bayashi): Do not update outputs in notebook automatically.
+nbsphinx_execute = 'never'
