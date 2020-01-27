@@ -8,8 +8,8 @@
 
 # general configuration
 backend=pytorch
-stage=-1       # start from -1 if you need to start from data download
-stop_stage=100
+stage=-3       # start from -1 if you need to start from data download
+stop_stage=-3
 ngpu=0         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
 dumpdir=dump   # directory to dump full features
@@ -54,8 +54,8 @@ recog_model=model.acc.best # set a model to be used for decoding: 'model.acc.bes
 # Set this to somewhere where you want to put your data, or where
 # someone else has already put it.  You'll want to change this
 # if you're not on the CLSP grid.
-datadir=/export/a15/vpanayotov/data
-datadir=/mnt/matylda3/data/librispeech_kaldi_download
+#datadir=/export/a15/vpanayotov/data
+datadir=/work/abelab/DB #/mnt/matylda3/data/librispeech_kaldi_download
 
 # base url for downloads.
 data_url=www.openslr.org/resources/12
@@ -105,8 +105,9 @@ train_dev=dev
 recog_set="test_clean test_other dev_clean dev_other"
 
 echo "stage -3: Data Download"
-for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
-    if [ ! -s ${datadir}/${part}.tar.gz ]; then
+# for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
+for part in test-other train-clean-360; do
+    if [ -s ${datadir}/${part}.tar.gz ]; then
         local/download_and_untar.sh ${datadir} ${data_url} ${part}
     fi
 done
