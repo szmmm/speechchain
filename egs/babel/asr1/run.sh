@@ -36,8 +36,8 @@ recog_model=model.acc.best # set a model to be used for decoding: 'model.acc.bes
 # exp tag
 tag="" # tag for managing experiments.
 
-langs="101 102 103 104 105 106 202 203 204 205 206 207 301 302 303 304 305 306 401 402 403"
-recog="107 201 307 404"
+langs="106"
+recog="106"
 
 . utils/parse_options.sh || exit 1;
 
@@ -69,9 +69,9 @@ recog_set=${recog_set%% }
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
   echo "stage 0: Setting up individual languages"
   ./local/setup_languages.sh --langs "${langs}" --recog "${recog}"
-  for x in ${train_set} ${train_dev} ${recog_set}; do
-	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
-  done
+#  for x in ${train_set} ${train_dev} ${recog_set}; do
+#	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
+#  done
 fi
 
 feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}

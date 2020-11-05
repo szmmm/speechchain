@@ -8,8 +8,8 @@
 . ./conf/lang.conf
 
 langs="106"
-recog="106"
-FLP=true
+test="106"
+FLP=false
 
 . ./utils/parse_options.sh
 
@@ -17,7 +17,7 @@ set -e
 set -o pipefail
 
 all_langs=""
-for l in `cat <(echo ${langs}) <(echo ${recog}) | tr " " "\n" | sort -u`; do
+for l in `cat <(echo ${langs}) <(echo ${test}) | tr " " "\n" | sort -u`; do
   all_langs="${l} ${all_langs}"
 done
 all_langs=${all_langs%% }
@@ -66,14 +66,14 @@ for l in ${langs}; do
   train_dirs="data/${l}/data/train_${l} ${train_dirs}"
 done
 
-for l in ${recog}; do
+for l in ${test}; do
   dev_dirs="data/${l}/data/dev_${l} ${dev_dirs}"
 done
 
 ./utils/combine_data.sh data/train ${train_dirs}
 ./utils/combine_data.sh data/dev ${dev_dirs}
 
-for l in ${recog}; do
+for l in ${test}; do
   ln -s ${cwd}/data/${l}/data/eval_${l} ${cwd}/data/eval_${l}
 done
 
