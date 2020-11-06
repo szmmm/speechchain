@@ -103,6 +103,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 #  done
 
   # compute global CMVN
+  export PATH=$MAIN_ROOT/utils:$MAIN_ROOT/espnet/bin:$PATH
   compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
   utils/fix_data_dir.sh data/${train_set}
 
