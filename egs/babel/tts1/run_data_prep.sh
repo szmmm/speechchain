@@ -1,3 +1,3 @@
 ./run.sh \
-    --stage 1 \
+    --stage 0 \
     --stop_stage 1
