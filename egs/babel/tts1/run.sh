@@ -18,12 +18,12 @@ seed=1       # random seed number
 resume=""    # the snapshot path to resume (if set empty, no effect)
 
 # feature extraction related
-fs=24000      # sampling frequency
+fs=8000      # sampling frequency
 fmax=""       # maximum frequency
 fmin=""       # minimum frequency
 n_mels=80     # number of mel basis
-n_fft=1024    # number of fft points
-n_shift=256   # number of shift points
+n_fft=400    # number of fft points
+n_shift=100   # number of shift points
 win_length="" # window length
 
 # feature configuration
@@ -69,7 +69,7 @@ eval_set=${eval_set%% }
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
   echo "stage 0: Setting up individual languages"
   ./local/setup_languages.sh --langs "${langs}" --test "${test}"
-#  for x in ${train_set} ${train_dev} ${recog_set}; do
+#  for x in ${train_set} ${train_dev} ${eval_set}; do
 #	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
 #  done
 fi
@@ -83,10 +83,22 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   fbankdir=fbank
   # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
   for x in ${train_set} ${train_dev} ${eval_set}; do
-      steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 20 --write_utt2num_frames true \
-          data/${x} exp/make_fbank/${x} ${fbankdir}
-      utils/fix_data_dir.sh data/${x}
-  done
+        make_fbank.sh --cmd "${train_cmd}" --nj ${nj} \
+            --fs ${fs} \
+            --fmax "${fmax}" \
+            --fmin "${fmin}" \
+            --n_fft ${n_fft} \
+            --n_shift ${n_shift} \
+            --win_length "${win_length}" \
+            --n_mels ${n_mels} \
+            data/${x} \
+            exp/make_fbank/${x} \
+            ${fbankdir}
+    done
+    #      steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 20 --write_utt2num_frames true \
+#          data/${x} exp/make_fbank/${x} ${fbankdir}
+#      utils/fix_data_dir.sh data/${x}
+#  done
 
   # compute global CMVN
   compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
@@ -109,10 +121,10 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
       data/${train_dev}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
   for rtask in ${eval_set}; do
-      feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_recog_dir}
+      feat_synthesis_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_synthesis_dir}
       dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
-            data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/recog/${rtask} \
-            ${feat_recog_dir}
+            data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/synthesis/${rtask} \
+            ${feat_synthesis_dir}
   done
 fi
 
@@ -141,9 +153,9 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms} \
          data/${train_dev} ${dict} > ${feat_dt_dir}/data.json
     for rtask in ${eval_set}; do
-        feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
-        data2json.sh --feat ${feat_recog_dir}/feats.scp \
-            --nlsyms ${nlsyms} data/${rtask} ${dict} > ${feat_recog_dir}/data.json
+        feat_synthesis_dir=${dumpdir}/${rtask}/delta${do_delta}
+        data2json.sh --feat ${feat_synthesis_dir}/feats.scp \
+            --nlsyms ${nlsyms} data/${rtask} ${dict} > ${feat_synthesis_dir}/data.json
     done
 fi
 
@@ -154,16 +166,16 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     vaddir=mfcc
     for name in ${train_set} ${dev_set} ${eval_set}; do
         utils/copy_data_dir.sh data/${name} data/${name}_mfcc_8k
-        utils/data/resample_data_dir.sh 16000 data/${name}_mfcc_8k
+        utils/data/resample_data_dir.sh 8000 data/${name}_mfcc_8k
         steps/make_mfcc.sh \
             --write-utt2num-frames true \
             --mfcc-config conf/mfcc.conf \
             --nj ${nj} --cmd "$train_cmd" \
-            data/${name}_mfcc_16k exp/make_mfcc_16k ${mfccdir}
-        utils/fix_data_dir.sh data/${name}_mfcc_16k
+            data/${name}_mfcc_8k exp/make_mfcc_8k ${mfccdir}
+        utils/fix_data_dir.sh data/${name}_mfcc_8k
         sid/compute_vad_decision.sh --nj ${nj} --cmd "$train_cmd" \
-            data/${name}_mfcc_16k exp/make_vad ${vaddir}
-        utils/fix_data_dir.sh data/${name}_mfcc_16k
+            data/${name}_mfcc_8k exp/make_vad ${vaddir}
+        utils/fix_data_dir.sh data/${name}_mfcc_8k
     done
 
     # Check pretrained model existence
