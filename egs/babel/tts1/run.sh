@@ -13,14 +13,16 @@ set -o pipefail
 
 # general configuration
 backend=pytorch
-stage=-1
+stage=0        # start from 0 if you need to start from data preparation
 stop_stage=100
-ngpu=1       # number of gpu in training
-nj=32        # numebr of parallel jobs
-dumpdir=dump # directory to dump full features
-verbose=0    # verbose option (if set > 1, get more log)
-seed=1       # random seed number
-resume=""    # the snapshot path to resume (if set empty, no effect)
+ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
+seed=1
+debugmode=1
+dumpdir=dump   # directory to dump full features
+N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
+verbose=0      # verbose option
+resume=""        # Resume the training from snapshot
+
 
 # feature extraction related
 fs=8000      # sampling frequency
@@ -56,11 +58,6 @@ tag="" # tag for managing experiments.
 
 . utils/parse_options.sh || exit 1;
 
-# Set bash to 'debug' mode, it will exit on :
-# -e 'error', -u 'undefined variable', -o ... 'error in pipeline', -x 'print commands',
-set -e
-set -u
-set -o pipefail
 
 train_set=train
 train_dev=dev
@@ -88,7 +85,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   fbankdir=fbank
   # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
   for x in ${train_set} ${train_dev} ${eval_set}; do
-        make_fbank.sh --cmd "${train_cmd}" --nj ${nj} \
+        make_fbank.sh --cmd "${train_cmd}" --nj 20 \
             --fs ${fs} \
             --fmax "${fmax}" \
             --fmin "${fmin}" \
