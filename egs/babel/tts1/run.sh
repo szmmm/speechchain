@@ -79,8 +79,6 @@ fi
 feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
 feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; mkdir -p ${feat_dt_dir}
 
-  echo "$PATH"
-  echo "$MAIN_ROOT"
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   echo "stage 1: Feature extraction"
@@ -105,7 +103,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 #  done
 
   # compute global CMVN
-  ${python} -m compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
+  ${python} compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
   utils/fix_data_dir.sh data/${train_set}
 
   exp_name=$(basename $PWD)
@@ -147,7 +145,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 
     echo "make a dictionary"
     echo "<unk> 1" > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
-    ${python} -m text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
+    ${python} text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
     | sort | uniq | grep -v -e '^\s*$' | grep -v '<unk>' | awk '{print $0 " " NR+1}' >> ${dict}
     wc -l ${dict}
 
