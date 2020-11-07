@@ -1,4 +1,4 @@
-#!/home/miproj/4thyr.oct2020/zs323/yr4project/speechchain/tools/venv/bin/python
+#!/usr/bin/env python
 import argparse
 import logging
 
