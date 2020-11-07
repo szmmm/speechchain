@@ -166,7 +166,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     # Make MFCCs and compute the energy-based VAD for each dataset
     mfccdir=mfcc
     vaddir=mfcc
-    for name in ${train_set} ${dev_set} ${eval_set}; do
+    for name in ${train_set} ${train_dev} ${eval_set}; do
         utils/copy_data_dir.sh data/${name} data/${name}_mfcc_8k
         utils/data/resample_data_dir.sh 8000 data/${name}_mfcc_8k
         steps/make_mfcc.sh \
@@ -190,13 +190,13 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
     fi
     # Extract x-vector
-    for name in ${train_set} ${dev_set} ${eval_set}; do
+    for name in ${train_set} ${train_dev} ${eval_set}; do
         sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
             ${nnet_dir} data/${name}_mfcc_8k \
             ${nnet_dir}/xvectors_${name}
     done
     # Update json
-    for name in ${train_set} ${dev_set} ${eval_set}; do
+    for name in ${train_set} ${train_dev} ${eval_set}; do
         local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_${name}/xvector.scp
     done
 fi
@@ -245,7 +245,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
                                --num ${n_average}
     fi
     pids=() # initialize pids
-    for name in ${dev_set} ${eval_set}; do
+    for name in ${train_dev} ${eval_set}; do
     (
         [ ! -e ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
@@ -274,7 +274,7 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "stage 6: Synthesis"
     pids=() # initialize pids
-    for name in ${dev_set} ${eval_set}; do
+    for name in ${train_dev} ${eval_set}; do
     (
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn.py --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
