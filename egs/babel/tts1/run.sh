@@ -16,7 +16,7 @@ backend=pytorch
 stage=0        # start from 0 if you need to start from data preparation
 stop_stage=100
 ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
-nj=32        # numebr of parallel jobs
+nj=20        # numebr of parallel jobs
 seed=1
 debugmode=1
 dumpdir=dump   # directory to dump full features
@@ -26,11 +26,11 @@ resume=""        # Resume the training from snapshot
 
 # feature extraction related
 fs=8000      # sampling frequency
-fmax=""       # maximum frequency
-fmin=""       # minimum frequency
+fmax=3800    # maximum frequency
+fmin=125       # minimum frequency
 n_mels=80     # number of mel basis
-n_fft=400    # number of fft points
-n_shift=100   # number of shift points
+n_fft=256    # number of fft points
+n_shift=64   # number of shift points
 win_length="" # window length
 
 # feature configuration
@@ -95,6 +95,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
             data/${x} \
             exp/make_fbank/${x} \
             ${fbankdir}
+        utils/fix_data_dir.sh data/${x}
     done
     #      steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj 20 --write_utt2num_frames true \
 #          data/${x} exp/make_fbank/${x} ${fbankdir}
@@ -276,7 +277,7 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     for name in ${dev_set} ${eval_set}; do
     (
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
-        apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
+        apply-cmvn.py --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
             ark,scp:${outdir}_denorm/${name}/feats.ark,${outdir}_denorm/${name}/feats.scp
         convert_fbank.sh --nj ${nj} --cmd "${train_cmd}" \
