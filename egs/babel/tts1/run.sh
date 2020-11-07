@@ -103,7 +103,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 #  done
 
   # compute global CMVN
-  ${python} compute-cmvn-stats.py scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
+  ${python} -m compute-cmvn-stats.py scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
   utils/fix_data_dir.sh data/${train_set}
 
   exp_name=$(basename $PWD)
