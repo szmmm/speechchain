@@ -75,8 +75,8 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 #  done
 fi
 
-feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
-feat_dt_dir=${dumpdir}/${train_dev}/delta${do_delta}; mkdir -p ${feat_dt_dir}
+feat_tr_dir=${dumpdir}/${train_set}; mkdir -p ${feat_tr_dir}
+feat_dt_dir=${dumpdir}/${train_dev}; mkdir -p ${feat_dt_dir}
 
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
@@ -110,12 +110,12 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   # dump features for training
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_tr_dir}/storage ]; then
   utils/create_split_dir.pl \
-      /export/b{10,11,12,13}/${USER}/espnet-data/egs/babel/${exp_name}/dump/${train_set}/delta${do_delta}/storage \
+      /export/b{10,11,12,13}/${USER}/espnet-data/egs/babel/${exp_name}/dump/${train_set}/storage \
       ${feat_tr_dir}/storage
   fi
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_dt_dir}/storage ]; then
   utils/create_split_dir.pl \
-      /export/b{10,11,12,13}/${USER}/espnet-data/egs/babel/${exp_name}/dump/${train_dev}/delta${do_delta}/storage \
+      /export/b{10,11,12,13}/${USER}/espnet-data/egs/babel/${exp_name}/dump/${train_dev}/storage \
       ${feat_dt_dir}/storage
   fi
   dump.sh --cmd "$train_cmd" --nj 20 --do_delta ${do_delta} \
@@ -123,7 +123,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
       data/${train_dev}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
   for rtask in ${eval_set}; do
-      feat_synthesis_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_synthesis_dir}
+      feat_synthesis_dir=${dumpdir}/${rtask}; mkdir -p ${feat_synthesis_dir}
       dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
             data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/synthesis/${rtask} \
             ${feat_synthesis_dir}
@@ -155,7 +155,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms} \
          data/${train_dev} ${dict} > ${feat_dt_dir}/data.json
     for rtask in ${eval_set}; do
-        feat_synthesis_dir=${dumpdir}/${rtask}/delta${do_delta}
+        feat_synthesis_dir=${dumpdir}/${rtask}
         data2json.sh --feat ${feat_synthesis_dir}/feats.scp \
             --nlsyms ${nlsyms} data/${rtask} ${dict} > ${feat_synthesis_dir}/data.json
     done
