@@ -49,7 +49,6 @@ griffin_lim_iters=1000  # the number of iterations of Griffin-Lim
 # someone else has already put it. You'll want to change this
 # if you're not on the CLSP grid.
 #datadir=/export/a15/vpanayotov/data
-python=python
 langs="106"
 test="106"
 
@@ -145,7 +144,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 
     echo "make a dictionary"
     echo "<unk> 1" > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
-    ${python} text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
+    text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
     | sort | uniq | grep -v -e '^\s*$' | grep -v '<unk>' | awk '{print $0 " " NR+1}' >> ${dict}
     wc -l ${dict}
 
