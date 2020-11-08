@@ -31,8 +31,8 @@ fs=8000     # sampling frequency
 fmax=""       # maximum frequency
 fmin=""       # minimum frequency
 n_mels=80     # number of mel basis
-n_fft=400    # number of fft points
-n_shift=100   # number of shift points
+n_fft=256    # number of fft points
+n_shift=64   # number of shift points
 win_length="" # window length
 
 # optimization related
@@ -54,11 +54,11 @@ recog_model=model.acc.best # set a model to be used for decoding: 'model.acc.bes
 # Set this to somewhere where you want to put your data, or where
 # someone else has already put it.  You'll want to change this
 # if you're not on the CLSP grid.
-datadir=/export/a15/vpanayotov/data
-datadir=/mnt/matylda3/data/librispeech_kaldi_download
+#datadir=/export/a15/vpanayotov/data
+#datadir=/mnt/matylda3/data/librispeech_kaldi_download
 
 # base url for downloads.
-data_url=www.openslr.org/resources/12
+#data_url=www.openslr.org/resources/12
 
 # bpemode (unigram or bpe)
 nbpe=5000
@@ -79,12 +79,12 @@ rnnlm_loss=none
 
 # exp tag
 tag="" # tag for managing experiments.
-asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
-asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
-rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
-rnnlm_model_conf=$PWD/rnnlm_models/librispeech_360/model.json
-tts_model=$PWD/pretrained_models/librispeech_100/tts/results/model.loss.best
-tts_model_conf=$PWD/pretrained_models/librispeech_100/tts/results/model.json
+#asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
+#asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
+#rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
+#rnnlm_model_conf=$PWD/rnnlm_models/librispeech_360/model.json
+#tts_model=$PWD/pretrained_models/librispeech_100/tts/results/model.loss.best
+#tts_model_conf=$PWD/pretrained_models/librispeech_100/tts/results/model.json
 spk_vector=exp/xvector_nnet_1a
 
 . utils/parse_options.sh || exit 1;
@@ -98,28 +98,28 @@ set -e
 set -u
 set -o pipefail
 
-train_set=train_960
-train_paired_set=train_clean_100
-train_unpaired_set=train_clean_360
+train_set=train
+train_paired_set=train_paired
+train_unpaired_set=train_unpaired
 train_dev=dev
 recog_set="test_clean test_other dev_clean dev_other"
 
-echo "stage -3: Data Download"
-for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
-    if [ ! -s ${datadir}/${part}.tar.gz ]; then
-        local/download_and_untar.sh ${datadir} ${data_url} ${part}
-    fi
-done
-
-### Task dependent. You have to make data the following preparation part by yourself.
-### But you can utilize Kaldi recipes in most cases
-echo "stage -2: Data preparation"
-for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
-    # use underscore-separated names in data directories.
-    if [ ! -s data/${part//-/_}/wav.scp ]; then
-        local/data_prep.sh ${datadir}/LibriSpeech/${part} data/${part//-/_}
-    fi
-done
+#echo "stage -3: Data Download"
+#for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
+#    if [ ! -s ${datadir}/${part}.tar.gz ]; then
+#        local/download_and_untar.sh ${datadir} ${data_url} ${part}
+#    fi
+#done
+#
+#### Task dependent. You have to make data the following preparation part by yourself.
+#### But you can utilize Kaldi recipes in most cases
+#echo "stage -2: Data preparation"
+#for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
+#    # use underscore-separated names in data directories.
+#    if [ ! -s data/${part//-/_}/wav.scp ]; then
+#        local/data_prep.sh ${datadir}/LibriSpeech/${part} data/${part//-/_}
+#    fi
+#done
 
 nj=20
 dev_set=$train_dev
@@ -136,15 +136,15 @@ bpemodel=data/lang_char/${train_set}_${bpemode}${nbpe}
 scratch=/mnt/scratch06/tmp/baskar/espnet_new/features
 nnet_dir=exp/xvector_nnet_1a
 
-if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
-    echo "stage -1: Tmp space allocation"
-    local/make_symlink_dir.sh --tmp-root $scratch/$fbankdir $fbankdir
-    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_dir $feat_tr_dir
-    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_p_dir $feat_tr_p_dir
-    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_up_dir $feat_tr_up_dir
-    local/make_symlink_dir.sh --tmp-root $scratch/$feat_dt_dir $feat_dt_dir
-    local/make_symlink_dir.sh --tmp-root $scratch/$feat_ev_dir $feat_ev_dir
-fi
+#if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
+#    echo "stage -1: Tmp space allocation"
+#    local/make_symlink_dir.sh --tmp-root $scratch/$fbankdir $fbankdir
+#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_dir $feat_tr_dir
+#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_p_dir $feat_tr_p_dir
+#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_up_dir $feat_tr_up_dir
+#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_dt_dir $feat_dt_dir
+#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_ev_dir $feat_ev_dir
+#fi
 
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Feature extraction for TTS and ASR"
