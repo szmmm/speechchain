@@ -82,7 +82,7 @@ feat_dt_dir=${dumpdir}/${train_dev}; mkdir -p ${feat_dt_dir}
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   echo "stage 1: Feature extraction"
   fbankdir=fbank
-  # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
+  # Generate the fbank features; by default 80-dimensional fbanks on each frame
   for x in ${train_set} ${train_dev} ${eval_set}; do
         make_fbank.sh --cmd "${train_cmd}" --nj 20 \
             --fs ${fs} \
