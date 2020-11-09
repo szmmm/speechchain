@@ -274,7 +274,9 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "stage 6: Synthesis"
     pids=() # initialize pids
-    for name in ${train_dev} ${eval_set}; do
+    debug_set=train_debug
+    #for name in ${train_dev} ${eval_set}; do
+    for name in ${debug_set}; do
     (
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn.py --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
