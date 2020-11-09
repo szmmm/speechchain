@@ -51,7 +51,7 @@ def griffin_lim(spc, n_fft, n_shift, win_length, window="hann", n_iters=100):
     assert spc.shape[1] == n_fft // 2 + 1
 
     if LooseVersion(librosa.__version__) >= LooseVersion("0.7.0"):
-        logging.warning("using librosaaaaaaaaaaaa")
+        logging.warning("using librosa")
         # use librosa's fast Grriffin-Lim algorithm
         spc = np.abs(spc.T)
         y = librosa.griffinlim(

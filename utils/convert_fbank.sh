@@ -74,6 +74,6 @@ ${cmd} JOB=1:${nj} ${logdir}/griffin_lim_${name}.JOB.log \
         scp:${logdir}/feats.JOB.scp \
         ${wavdir}
 
-rm ${logdir}/feats.*.scp 2>/dev/null
+#rm ${logdir}/feats.*.scp 2>/dev/null
 
 echo "Succeeded creating wav for $name"
