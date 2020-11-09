@@ -245,7 +245,9 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
                                --num ${n_average}
     fi
     pids=() # initialize pids
-    for name in ${train_dev} ${eval_set}; do
+    debug_set=train_debug
+    #for name in ${train_dev} ${eval_set}; do
+    for name in ${debug_set}; do
     (
         [ ! -e ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
