@@ -7,6 +7,8 @@ import argparse
 import logging
 import os
 
+from distutils.version import LooseVersion
+
 import librosa
 import numpy as np
 from scipy.io.wavfile import write
@@ -30,16 +32,64 @@ def logmelspc_to_linearspc(lmspc, fs, n_mels, n_fft, fmin=None, fmax=None):
     return spc
 
 
-def griffin_lim(spc, n_fft, n_shift, win_length, window='hann', iters=100):
+def griffin_lim(spc, n_fft, n_shift, win_length, window="hann", n_iters=100):
+    """Convert linear spectrogram into waveform using Griffin-Lim.
+
+    Args:
+        spc (ndarray): Linear spectrogram (T, n_fft // 2 + 1).
+        n_fft (int): Number of FFT points.
+        n_shift (int): Shift size in points.
+        win_length (int): Window length in points.
+        window (str, optional): Window function type.
+        n_iters (int, optionl): Number of iterations of Griffin-Lim Algorithm.
+
+    Returns:
+        ndarray: Reconstructed waveform (N,).
+
+    """
+    # assert the size of input linear spectrogram
     assert spc.shape[1] == n_fft // 2 + 1
-    cspc = np.abs(spc).astype(np.complex).T
-    angles = np.exp(2j * np.pi * np.random.rand(*cspc.shape))
-    y = librosa.istft(cspc * angles, n_shift, win_length, window=window)
-    for i in range(iters):
-        angles = np.exp(1j * np.angle(librosa.stft(y, n_fft, n_shift, win_length, window=window)))
+
+    if LooseVersion(librosa.__version__) >= LooseVersion("0.7.0"):
+        # use librosa's fast Grriffin-Lim algorithm
+        spc = np.abs(spc.T)
+        y = librosa.griffinlim(
+            S=spc,
+            n_iter=n_iters,
+            hop_length=n_shift,
+            win_length=win_length,
+            window=window,
+            center=True if spc.shape[1] > 1 else False,
+        )
+    else:
+        # use slower version of Grriffin-Lim algorithm
+        logging.warning(
+            "librosa version is old. use slow version of Grriffin-Lim algorithm."
+            "if you want to use fast Griffin-Lim, please update librosa via "
+            "`source ./path.sh && pip install librosa==0.7.0`."
+        )
+        cspc = np.abs(spc).astype(np.complex).T
+        angles = np.exp(2j * np.pi * np.random.rand(*cspc.shape))
         y = librosa.istft(cspc * angles, n_shift, win_length, window=window)
+        for i in range(n_iters):
+            angles = np.exp(
+                1j
+                * np.angle(librosa.stft(y, n_fft, n_shift, win_length, window=window))
+            )
+            y = librosa.istft(cspc * angles, n_shift, win_length, window=window)
 
     return y
+
+# def griffin_lim(spc, n_fft, n_shift, win_length, window='hann', iters=100):
+#     assert spc.shape[1] == n_fft // 2 + 1
+#     cspc = np.abs(spc).astype(np.complex).T
+#     angles = np.exp(2j * np.pi * np.random.rand(*cspc.shape))
+#     y = librosa.istft(cspc * angles, n_shift, win_length, window=window)
+#     for i in range(iters):
+#         angles = np.exp(1j * np.angle(librosa.stft(y, n_fft, n_shift, win_length, window=window)))
+#         y = librosa.istft(cspc * angles, n_shift, win_length, window=window)
+#
+#     return y
 
 
 def get_parser():
@@ -108,7 +158,7 @@ def main():
             n_shift=args.n_shift,
             win_length=args.win_length,
             window=args.window,
-            iters=args.iters)
+            n_iters=args.iters)
         logging.info("(%d) %s" % (idx, utt_id))
         write(args.outdir + "/%s.wav" % utt_id,
               args.fs,
