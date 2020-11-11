@@ -8,7 +8,7 @@
 
 # general configuration
 backend=pytorch
-stage=-1       # start from -1 if you need to start from data download
+stage=-1    # start from -1 if you need to start from data download
 stop_stage=100
 ngpu=0         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
@@ -66,12 +66,12 @@ bpemode=unigram
 use_bpe=false
 
 # training related
-asr_train=true
-asr_decode=true
+asr_train=false
+asr_decode=false
 tts_train=true
 tts_decode=true
-asrtts_train=true
-asrtts_decode=true
+asrtts_train=false
+asrtts_decode=false
 unpair=dualp
 policy_gradient=true
 use_rnnlm=false
@@ -98,11 +98,15 @@ set -e
 set -u
 set -o pipefail
 
+langs="106"
+test="106"
+
 train_set=train
-train_paired_set=train_paired
-train_unpaired_set=train_unpaired
+#train_paired_set=train_paired
+#train_unpaired_set=train_unpaired
 train_dev=dev
-recog_set="test_clean test_other dev_clean dev_other"
+#recog_set="test_clean test_other dev_clean dev_other"
+recog_set="dev eval_106"
 
 #echo "stage -3: Data Download"
 #for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
@@ -123,17 +127,19 @@ recog_set="test_clean test_other dev_clean dev_other"
 
 nj=20
 dev_set=$train_dev
-eval_set=test_clean
+#eval_set=test_clean
+eval_set=eval_106
 fbankdir=fbank
-feat_tr_dir=${dumpdir}/${train_set}; 
-feat_tr_p_dir=${dumpdir}/${train_paired_set};
-feat_tr_up_dir=${dumpdir}/${train_unpaired_set};
-feat_dt_dir=${dumpdir}/${dev_set};
+feat_tr_dir=${dumpdir}/${train_set}; mkdir -p ${feat_tr_dir}
+feat_dt_dir=${dumpdir}/${dev_set}; mkdir -p ${feat_dt_dir}
+#feat_tr_p_dir=${dumpdir}/${train_paired_set};
+#feat_tr_up_dir=${dumpdir}/${train_unpaired_set};
 feat_ev_dir=${dumpdir}/${eval_set};
+
 dict=data/lang_char/${train_set}_units.txt
 nlsyms=data/lang_char/non_lang_syms.txt
 bpemodel=data/lang_char/${train_set}_${bpemode}${nbpe}
-scratch=/mnt/scratch06/tmp/baskar/espnet_new/features
+#scratch=/mnt/scratch06/tmp/baskar/espnet_new/features
 nnet_dir=exp/xvector_nnet_1a
 
 #if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
@@ -146,9 +152,18 @@ nnet_dir=exp/xvector_nnet_1a
 #    local/make_symlink_dir.sh --tmp-root $scratch/$feat_ev_dir $feat_ev_dir
 #fi
 
+if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
+  echo "stage 0: Setting up individual languages"
+  ./local/setup_languages.sh --langs "${langs}" --test "${test}"
+#  for x in ${train_set} ${train_dev} ${eval_set}; do
+#	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
+#  done
+fi
+
+
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Feature extraction for TTS and ASR"
-    for x in dev_clean test_clean train_clean_100 train_clean_360; do
+    for x in ${train_set} ${train_dev} ${eval_set}; do
         if [ ! -s data/${x}/feats.scp ]; then
         make_fbank.sh --cmd "${train_cmd}" --nj ${nj} \
             --fs ${fs} \
@@ -163,29 +178,35 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
             ${fbankdir}
         fi
     done
-    utils/combine_data.sh data/${train_set}_org data/train_clean_100 data/train_clean_360
-    utils/combine_data.sh data/${dev_set}_org data/dev_clean
-    utils/copy_data_dir.sh data/${train_paired_set} data/${train_paired_set}_org
-    utils/copy_data_dir.sh data/${train_unpaired_set} data/${train_unpaired_set}_org
+#    utils/combine_data.sh data/${train_set}_org data/train_clean_100 data/train_clean_360
+#    utils/combine_data.sh data/${dev_set}_org data/dev_clean
+#    utils/copy_data_dir.sh data/${train_paired_set} data/${train_paired_set}_org
+#    utils/copy_data_dir.sh data/${train_unpaired_set} data/${train_unpaired_set}_org
     # remove utt having more than 3000 frames
     # remove utt having more than 400 characters
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${dev_set}_org data/${dev_set}
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_paired_set}_org data/${train_paired_set}
-    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_unpaired_set}_org data/${train_unpaired_set}
+#    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
+#    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${dev_set}_org data/${dev_set}
+#    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_paired_set}_org data/${train_paired_set}
+#    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_unpaired_set}_org data/${train_unpaired_set}
     # compute global CMVN
     compute-cmvn-stats scp:data/${train_set}/feats.scp data/${train_set}/cmvn.ark
     # dump features for training
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
         data/${train_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train ${feat_tr_dir}
-    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
-        data/${train_paired_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train_p ${feat_tr_p_dir}
-    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
-        data/${train_unpaired_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train_up ${feat_tr_up_dir}
+#    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
+#        data/${train_paired_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train_p ${feat_tr_p_dir}
+#    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
+#        data/${train_unpaired_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train_up ${feat_tr_up_dir}
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
         data/${dev_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
         data/${eval_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/eval ${feat_ev_dir}
+#    for rtask in ${eval_set}; do
+#        feat_synthesis_dir=${dumpdir}/${rtask}; mkdir -p ${feat_synthesis_dir}
+#        dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
+#              data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/synthesis/${rtask} \
+#              ${feat_synthesis_dir}
+  done
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
@@ -210,10 +231,10 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     if [ ! -s ${feat_ev_dir}/data.json ]; then
     data2json.sh --feat ${feat_tr_dir}/feats.scp \
          data/${train_set} ${dict} > ${feat_tr_dir}/data.json
-    data2json.sh --feat ${feat_tr_p_dir}/feats.scp \
-         data/${train_paired_set} ${dict} > ${feat_tr_p_dir}/data.json
-    data2json.sh --feat ${feat_tr_up_dir}/feats.scp \
-         data/${train_unpaired_set} ${dict} > ${feat_tr_up_dir}/data.json
+#    data2json.sh --feat ${feat_tr_p_dir}/feats.scp \
+#         data/${train_paired_set} ${dict} > ${feat_tr_p_dir}/data.json
+#    data2json.sh --feat ${feat_tr_up_dir}/feats.scp \
+#         data/${train_unpaired_set} ${dict} > ${feat_tr_up_dir}/data.json
     data2json.sh --feat ${feat_dt_dir}/feats.scp \
          data/${dev_set} ${dict} > ${feat_dt_dir}/data.json
     data2json.sh --feat ${feat_ev_dir}/feats.scp \
@@ -378,10 +399,13 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     # decoding related
     model=model.loss.best
 
-    for name in ${train_paired_set} ${dev_set}; do
+    #for name in ${train_paired_set} ${dev_set}; do
+    for name in ${train_set} ${dev_set}; do
         cp ${dumpdir}/${name}/data.json ${dumpdir}/${name}/data_tts.json
-        if [ $name == ${train_paired_set} ]; then fname=${train_set}; else fname=$name; fi
-        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
+#        if [ $name == ${train_paired_set} ]; then fname=${train_set}; else fname=$name; fi
+#        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
+        if [ $name == ${train_set} ]; then fname=${train_set}; else fname=$name; fi
+        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${train_set}/xvector.scp
     done
 
 
