@@ -1,6 +1,15 @@
 MAIN_ROOT=$PWD/../../..
 KALDI_ROOT=$MAIN_ROOT/tools/kaldi
 
+CUDAROOT=/usr/local/cuda-9.0
+
+export PATH=$CUDAROOT/bin:$PATH
+export CUDA_TOOLKIT_ROOT_DIR=$CUDAROOT
+export LD_LIBRARY_PATH="$CUDA_HOME/extras/CUPTI/lib64:$LD_LIBRARY_PATH"
+export LIBRARY_PATH=$CUDAROOT/lib64:$LIBRARY_PATH
+export LD_LIBRARY_PATH=$CUDAROOT/lib64:$LD_LIBRARY_PATH
+export CUDA_HOME=$CUDAROOT
+export CUDA_PATH=$CUDAROOT
 
 [ -f $KALDI_ROOT/tools/env.sh ] && . $KALDI_ROOT/tools/env.sh
 export PATH=$PWD/utils/:$KALDI_ROOT/tools/openfst/bin:$KALDI_ROOT/tools/sctk/bin:$PWD:$PATH
