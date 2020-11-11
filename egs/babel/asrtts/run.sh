@@ -68,8 +68,8 @@ use_bpe=false
 # training related
 asr_train=false
 asr_decode=false
-tts_train=false
-tts_decode=false
+tts_train=true
+tts_decode=true
 asrtts_train=false
 asrtts_decode=false
 unpair=dualp
