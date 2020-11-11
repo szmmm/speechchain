@@ -31,8 +31,8 @@ fs=8000     # sampling frequency
 fmax=""       # maximum frequency
 fmin=""       # minimum frequency
 n_mels=80     # number of mel basis
-n_fft=256    # number of fft points
-n_shift=64   # number of shift points
+n_fft=512    # number of fft points
+n_shift=128   # number of shift points
 win_length="" # window length
 
 # optimization related
