@@ -206,7 +206,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 #        dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
 #              data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/synthesis/${rtask} \
 #              ${feat_synthesis_dir}
-  done
+#    done
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
