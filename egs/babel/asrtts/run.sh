@@ -153,7 +153,7 @@ nnet_dir=exp/xvector_nnet_1a
 #fi
 
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
-  echo "stage 0: Setting up individual languages"
+  echo "stage -1: Setting up individual languages"
   ./local/setup_languages.sh --langs "${langs}" --test "${test}"
 #  for x in ${train_set} ${train_dev} ${eval_set}; do
 #	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
@@ -393,7 +393,8 @@ fi
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: TTS training, decode and synthesize"
     ttsexpdir=exp/tts_${tag}
-    tr_json=$feat_tr_p_dir/data_tts.json
+#    tr_json=$feat_tr_p_dir/data_tts.json
+    tr_json=$feat_tr_dir/data_tts.json
     dt_json=$feat_dt_dir/data_tts.json
     seed=1
     # decoding related
@@ -405,7 +406,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
 #        if [ $name == ${train_paired_set} ]; then fname=${train_set}; else fname=$name; fi
 #        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
         if [ $name == ${train_set} ]; then fname=${train_set}; else fname=$name; fi
-        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${train_set}/xvector.scp
+        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
     done
 
 
