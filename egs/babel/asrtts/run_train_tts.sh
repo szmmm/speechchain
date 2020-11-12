@@ -8,4 +8,4 @@ set -o pipefail
 ./run.sh \
     --stage 4 \
     --stop_stage 4 \
-    --resume snapshot.ep.34
+    --resume $PWD/exp/tts_/results/snapshot.ep.34
