@@ -458,7 +458,7 @@ def train(args):
                        trigger=training.triggers.MaxValueTrigger('validation/main/acc'))
 
     # save snapshot which contains model and optimizer states
-    trainer.extend(torch_snapshot(), trigger=(1, 'epoch'))
+    trainer.extend(torch_snapshot(), trigger=(2, 'epoch'))
 
     # epsilon decay in the optimizer
     if args.opt == 'adadelta':
