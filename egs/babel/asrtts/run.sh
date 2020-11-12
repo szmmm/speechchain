@@ -391,7 +391,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
 fi
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
-    echo "stage 4: TTS training, decode and synthesize"
+    echo "stage 4: TTS training"
     ttsexpdir=exp/tts_${tag}
 #    tr_json=$feat_tr_p_dir/data_tts.json
     tr_json=$feat_tr_dir/data_tts.json
@@ -424,6 +424,9 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
            --train-json ${tr_json} \
            --valid-json ${dt_json} 
         fi
+fi
+
+if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     if [ $tts_decode == 'true' ]; then
     outdir=${ttsexpdir}/outputs_${model}
     for name in ${dev_set} ${eval_set};do
@@ -465,7 +468,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     fi
 fi
 
-if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
+if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "stage 5: ASR-TTS training, decode and synthesize"
     asrttsexpdir=exp/asrtts_${tag}
     train_opts=
