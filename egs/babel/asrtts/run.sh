@@ -244,7 +244,10 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     data2json.sh --feat ${feat_ev_dir}/feats.scp --nlsyms ${nlsyms}\
          data/${eval_set} ${dict} > ${feat_ev_dir}/data.json
     fi
-    # Make MFCCs and compute the energy-based VAD for each dataset
+fi
+
+if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
+    echo "Make MFCCs and compute the energy-based VAD for each dataset"
     mfccdir=mfcc
     vaddir=mfcc
     for name in ${train_set} ${dev_set} ${eval_set}; do
@@ -280,8 +283,8 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     done
 fi
 
-if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
-    echo "stage 2: LM training"
+if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
+    echo "stage 3: LM training"
     if [ $use_bpe == 'true' ]; then
         lmexpname=train_rnnlm_${backend}_${lmtag}_${bpemode}${nbpe}
         lmexpdir=exp/${lmexpname}
