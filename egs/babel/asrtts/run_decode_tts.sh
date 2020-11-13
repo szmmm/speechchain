@@ -8,4 +8,4 @@ set -o pipefail
 ./run.sh \
     --stage 5 \
     --stop_stage 5 \
-    --model snapshot.ep.34
+    --model model.loss.best
