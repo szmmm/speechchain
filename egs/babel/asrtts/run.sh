@@ -452,7 +452,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
             cat "${outdir}/${name}/feats.$n.scp" || exit 1;
         done > ${outdir}/${name}/feats.scp
     done
-    for name in ${dev_set} ${eval_set};do
+#    for name in ${dev_set} ${eval_set};do
+     for name in ${train_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
