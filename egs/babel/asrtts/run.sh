@@ -459,7 +459,7 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
   #    for name in ${dev_set} ${eval_set};do
-  train_debug = GL_debug
+  train_debug=GL_debug
      for name in ${train_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
