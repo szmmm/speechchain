@@ -76,6 +76,7 @@ unpair=dualp
 policy_gradient=true
 use_rnnlm=false
 rnnlm_loss=none
+nj=5
 
 # exp tag
 tag="" # tag for managing experiments.
@@ -125,7 +126,6 @@ recog_set="dev eval_106"
 #    fi
 #done
 
-nj=20
 dev_set=$train_dev
 #eval_set=test_clean
 eval_set=eval_106
