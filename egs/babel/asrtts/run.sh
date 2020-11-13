@@ -138,6 +138,7 @@ feat_ev_dir=${dumpdir}/${eval_set};
 
 dict=data/lang_char/${train_set}_units.txt
 nlsyms=data/lang_char/non_lang_syms.txt
+
 bpemodel=data/lang_char/${train_set}_${bpemode}${nbpe}
 #scratch=/mnt/scratch06/tmp/baskar/espnet_new/features
 nnet_dir=exp/xvector_nnet_1a
@@ -221,23 +222,26 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     else
         echo "make a non-linguistic symbol list"
-        #cut -f 2- data/${train_set}/text | tr " " "\n" | sort | uniq | grep "<" > ${nlsyms}
-        #cat ${nlsyms}
-        text2token.py -s 1 -n 1 data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
-        | sort | uniq | grep -v -e '^\s*$' | awk '{print $0 " " NR+1}' >> ${dict}
+        cut -f 2- data/${train_set}/text | tr " " "\n" | sort | uniq | grep "<" > ${nlsyms}
+        cat ${nlsyms}
+
+        echo "make a dictionary"
+        text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
+        | sort | uniq | grep -v -e '^\s*$' | grep -v '<unk>' | awk '{print $0 " " NR+1}' >> ${dict}
     fi
+
     wc -l ${dict}
     # make json labels
     if [ ! -s ${feat_ev_dir}/data.json ]; then
-    data2json.sh --feat ${feat_tr_dir}/feats.scp \
+    data2json.sh --feat ${feat_tr_dir}/feats.scp --nlsyms ${nlsyms}\
          data/${train_set} ${dict} > ${feat_tr_dir}/data.json
 #    data2json.sh --feat ${feat_tr_p_dir}/feats.scp \
 #         data/${train_paired_set} ${dict} > ${feat_tr_p_dir}/data.json
 #    data2json.sh --feat ${feat_tr_up_dir}/feats.scp \
 #         data/${train_unpaired_set} ${dict} > ${feat_tr_up_dir}/data.json
-    data2json.sh --feat ${feat_dt_dir}/feats.scp \
+    data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms}\
          data/${dev_set} ${dict} > ${feat_dt_dir}/data.json
-    data2json.sh --feat ${feat_ev_dir}/feats.scp \
+    data2json.sh --feat ${feat_ev_dir}/feats.scp --nlsyms ${nlsyms}\
          data/${eval_set} ${dict} > ${feat_ev_dir}/data.json
     fi
     # Make MFCCs and compute the energy-based VAD for each dataset
