@@ -427,6 +427,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
 fi
 
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
+    echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
     ttsexpdir=exp/tts_${tag}
     model=model.loss.best
@@ -452,7 +453,12 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
             cat "${outdir}/${name}/feats.$n.scp" || exit 1;
         done > ${outdir}/${name}/feats.scp
     done
-#    for name in ${dev_set} ${eval_set};do
+  fi
+fi
+
+if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
+  echo "stage 6: Synthesize............"
+  #    for name in ${dev_set} ${eval_set};do
      for name in ${train_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
@@ -470,11 +476,11 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
             ${outdir}_denorm/${name}/log \
             ${outdir}_denorm/${name}/wav
     done
-    fi
 fi
 
-if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
-    echo "stage 6: ASR-TTS training, decode and synthesize"
+
+if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ]; then
+    echo "stage 7: ASR-TTS training, decode and synthesize"
     asrttsexpdir=exp/asrtts_${tag}
     train_opts=
 
