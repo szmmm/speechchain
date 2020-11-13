@@ -30,6 +30,7 @@ use-residual: false  # whether to use residual connection in encoder convolution
 use-masking: true    # whether to mask the padded part in loss calculation
 bce-pos-weight: 1.0  # weight for positive samples of stop token in cross-entropy calculation
 reduction-factor: 2
+use-guided-attn-loss: true
 
 # minibatch related
 batch-size: 64
