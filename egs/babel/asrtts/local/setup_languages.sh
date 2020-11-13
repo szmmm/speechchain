@@ -9,7 +9,7 @@
 
 langs="106"
 test="106"
-FLP=false
+FLP=true
 
 . ./utils/parse_options.sh
 
