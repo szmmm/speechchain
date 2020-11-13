@@ -459,6 +459,9 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
   #    for name in ${dev_set} ${eval_set};do
+  ttsexpdir=exp/tts_${tag}
+  model=model.loss.best
+  outdir=${ttsexpdir}/outputs_${model}
   train_debug=GL_debug
      for name in ${train_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
