@@ -405,8 +405,8 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         cp ${dumpdir}/${name}/data.json ${dumpdir}/${name}/data_tts.json
 #        if [ $name == ${train_paired_set} ]; then fname=${train_set}; else fname=$name; fi
 #        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
-        if [ $name == ${train_set} ]; then fname=${train_set}; else fname=$name; fi
-        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
+#        if [ $name == ${train_set} ]; then fname=${train_set}; else fname=$name; fi
+#        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
     done
 
 
@@ -431,7 +431,9 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     ttsexpdir=exp/tts_${tag}
     model=model.loss.best
     outdir=${ttsexpdir}/outputs_${model}
-    for name in ${dev_set} ${eval_set};do
+    train_debug=train_debug
+#    for name in ${dev_set} ${eval_set};do
+     for name in ${train_debug};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
         splitjson.py --parts ${nj} ${outdir}/${name}/data.json
@@ -471,7 +473,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
 fi
 
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
-    echo "stage 5: ASR-TTS training, decode and synthesize"
+    echo "stage 6: ASR-TTS training, decode and synthesize"
     asrttsexpdir=exp/asrtts_${tag}
     train_opts=
 
