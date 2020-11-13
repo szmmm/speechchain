@@ -429,6 +429,7 @@ fi
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     if [ $tts_decode == 'true' ]; then
     ttsexpdir=exp/tts_${tag}
+    model=model.loss.best
     outdir=${ttsexpdir}/outputs_${model}
     for name in ${dev_set} ${eval_set};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
