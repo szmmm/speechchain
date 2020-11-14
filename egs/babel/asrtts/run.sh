@@ -439,9 +439,9 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     ttsexpdir=exp/tts_${tag}
     model=model.loss.best
     outdir=${ttsexpdir}/outputs_${model}
-    train_debug=train_debug
+    checkpoint_debug=dev
 #    for name in ${dev_set} ${eval_set};do
-     for name in ${train_debug};do
+     for name in ${checkpoint_debug};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
         splitjson.py --parts ${nj} ${outdir}/${name}/data.json
@@ -465,12 +465,12 @@ fi
 
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
-  #    for name in ${dev_set} ${eval_set};do
   ttsexpdir=exp/tts_${tag}
   model=model.loss.best
   outdir=${ttsexpdir}/outputs_${model}
-  train_debug=GL_debug
-     for name in ${train_debug};do
+  checkpoint_debug=dev
+  #    for name in ${dev_set} ${eval_set};do
+     for name in ${checkpoint_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
