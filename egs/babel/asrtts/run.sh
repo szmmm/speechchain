@@ -439,7 +439,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     ttsexpdir=exp/tts_${tag}
     model=model.loss.best
     outdir=${ttsexpdir}/outputs_${model}
-    checkpoint_debug=checkpoint_debug
+    checkpoint_debug="debug_dev debug_train"
 #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
@@ -468,7 +468,7 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   ttsexpdir=exp/tts_${tag}
   model=model.loss.best
   outdir=${ttsexpdir}/outputs_${model}
-  checkpoint_debug=checkpoint_debug
+  checkpoint_debug="debug_dev debug_train"
   #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
