@@ -436,8 +436,8 @@ fi
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
-    ttsexpdir=exp/tts_${tag}
-    model=model.loss.best
+    ttsexpdir=exp_full/tts_${tag}
+    model=snapshot.ep.80
     outdir=${ttsexpdir}/outputs_${model}
     checkpoint_debug="debug_dev debug_train"
 #    for name in ${dev_set} ${eval_set};do
@@ -465,8 +465,8 @@ fi
 
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
-  ttsexpdir=exp/tts_${tag}
-  model=model.loss.best
+  ttsexpdir=exp_full/tts_${tag}
+  model=snapshot.ep.80
   outdir=${ttsexpdir}/outputs_${model}
   checkpoint_debug="debug_dev debug_train"
   #    for name in ${dev_set} ${eval_set};do
