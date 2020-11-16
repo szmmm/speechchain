@@ -440,7 +440,6 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     model=snapshot.ep.103
     outdir=${ttsexpdir}/outputs_${model}
     checkpoint_debug="debug_dev debug_train"
-    dumpdir=dump_full
 #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
