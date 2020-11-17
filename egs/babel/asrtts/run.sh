@@ -282,7 +282,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 #        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_${name}/xvector.scp
 #    done
     for name in ${eval_set}; do
-        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_train/spk_xvector.scp
+        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_eval_106/spk_xvector.scp
     done
 fi
 
