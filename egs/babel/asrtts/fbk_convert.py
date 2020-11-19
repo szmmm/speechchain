@@ -1,13 +1,14 @@
 
 def write_fbk(file_name, feat_path):
     with open(file_name, 'r') as f:
-        for x in f.readlines():
+        lines = f.readlines()
+        for lin_num, x in enumerate(lines):
             audio_name = x.split("/wav/")[1].split(".")[0]
             feat_name = ''.join([feat_path, audio_name, '.fbk'])
-            file_lines = ''.join([x.strip(), feat_name, '\n'])
-
+            lines[lin_num] = ''.join([x.strip(), ' ', feat_name, '\n'])
     with open(file_name, 'w') as f:
-        f.writelines(file_lines)
+        for line in lines:
+            f.writelines(line)
 
 
 def main():
