@@ -31,7 +31,7 @@ def write_scp(scp_name, fbk_name, feat_path):
 
 def main():
     scp_name = '/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_/outputs_snapshot.ep.200_denorm/convert/dev.scp'
-    fbk_name = '/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_/outputs_snapshot.ep.200_denorm/convert/lib/coding/segmented.dev.fbk'
+    fbk_name = '/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_/outputs_snapshot.ep.200_denorm/convert/lib/coding/segmented.dev.sph.fbk'
     feat_path = '/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_/outputs_snapshot.ep.200_denorm/fbk/'
     write_scp(scp_name, fbk_name, feat_path)
 
