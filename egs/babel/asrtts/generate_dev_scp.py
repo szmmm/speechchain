@@ -6,23 +6,23 @@ def write_scp(scp_name, fbk_name, feat_path):
             rhs = ''.join([feat_path, feat_name])
 
             #generating lhs
-            feat_lhs = feat_name.replace('_', '-').replace('.fbk', '')
+            feat_lhs = feat_name.replace('_', '-').replace('.fbk', '').strip()
             if 'A' in feat_lhs:
                 uttrID1 = feat_lhs.split('-A-')[0]
-                uttrID2 = feat_lhs.split('-A-')[1][:-6]
-                timetag = '0' + feat_lhs.split('-A-')[1][-6:]
-                lhs = ''.join(['BPL', uttrID1, '-', uttrID2, 'in', '_CIXXXXX_', timetag, '_XXXXXXX'])
+                uttrID2 = feat_lhs.split('-A-')[1].strip()
+                timetag = '0' + feat_lhs.split('-A-')[1][-6:].strip()
+                lhs = ''.join(['BPL', uttrID1, '-', uttrID2, 'in', '_CIXXXXX_', timetag, '_XXXXXXX', '.fbk'])
 
             elif 'B' in feat_lhs:
                 uttrID1 = feat_lhs.split('-B-')[0]
                 uttrID2 = feat_lhs.split('-B-')[1][:-6]
                 timetag = '0' + feat_lhs.split('-B-')[1][-6:]
-                lhs = ''.join(['BPL', uttrID1, '-', uttrID2, 'out', '_CIXXXXX_', timetag, '_XXXXXXX'])
+                lhs = ''.join(['BPL', uttrID1, '-', uttrID2, 'out', '_CIXXXXX_', timetag, '_XXXXXXX', 'fbk'])
 
             else:
                 print("WRONGGGGGGGGGGGG")
 
-            fbk_lines[lin_num] = ''.join([lhs, '=', rhs, '\n'])
+            fbk_lines[lin_num] = ''.join([lhs, '=', rhs])
 
     with open(scp_name, 'w') as scp:
         for line in fbk_lines:
