@@ -9,7 +9,7 @@
 
 langs="106"
 test="106"
-FLP=false
+FLP=true
 
 . ./utils/parse_options.sh
 
@@ -24,7 +24,7 @@ all_langs=${all_langs%% }
 
 # Save top-level directory
 cwd=$(utils/make_absolute.sh `pwd`)
-echo "Stage 0: Setup Language Specific Directories"
+echo "Stage -1: Setup Language Specific Directories"
 
 echo " --------------------------------------------"
 echo "Languagues: ${all_langs}"
