@@ -400,6 +400,16 @@ if [ ${stage} -le 100 ] && [ ${stop_stage} -ge 100 ]; then
     fi
 fi
 
+if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
+    echo "stage 3: Cleaning up data in JSON files"
+    ttsexpdir=exp/tts_${tag}
+#   tr_json=$feat_tr_p_dir/data_tts.json
+#    tr_json=$feat_tr_dir/data_tts.json
+#    dt_json=$feat_dt_dir/data_tts.json
+    tr_json=$feat_tr_dir/data_clean.json
+    dt_json=$feat_dt_dir/data_clean.json
+
+fi
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: TTS training"
