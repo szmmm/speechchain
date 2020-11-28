@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=20
 
 # exp tag
-tag="" # tag for managing experiments.
+tag="clean" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
@@ -400,29 +400,32 @@ if [ ${stage} -le 100 ] && [ ${stop_stage} -ge 100 ]; then
     fi
 fi
 
-if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
+if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "stage 3: Cleaning up data in JSON files"
+    ttsexpdir=exp/tts_${tag}
+#   tr_json=$feat_tr_p_dir/data_tts.json
+#    tr_json=$feat_tr_dir/data_tts.json
+#    dt_json=$feat_dt_dir/data_tts.json
+    tr_json=$feat_tr_dir/data_clean.json
+    dt_json=$feat_dt_dir/data_clean.json
 
 fi
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: TTS training"
     ttsexpdir=exp/tts_${tag}
-#    tr_json=$feat_tr_p_dir/data_tts.json
-    tr_json=$feat_tr_dir/data_tts.json
-    dt_json=$feat_dt_dir/data_tts.json
     seed=1
     # decoding related
     model=model.loss.best
 
     #for name in ${train_paired_set} ${dev_set}; do
-    for name in ${train_set} ${dev_set}; do
-        cp ${dumpdir}/${name}/data.json ${dumpdir}/${name}/data_tts.json
-#        if [ $name == ${train_paired_set} ]; then fname=${train_set}; else fname=$name; fi
-#        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
-#        if [ $name == ${train_set} ]; then fname=${train_set}; else fname=$name; fi
-#        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
-    done
+#    for name in ${train_set} ${dev_set}; do
+#        cp ${dumpdir}/${name}/data.json ${dumpdir}/${name}/data_tts.json
+##        if [ $name == ${train_paired_set} ]; then fname=${train_set}; else fname=$name; fi
+##        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
+##        if [ $name == ${train_set} ]; then fname=${train_set}; else fname=$name; fi
+##        local/update_json.sh ${dumpdir}/${name}/data_tts.json ${nnet_dir}/xvectors_${fname}/xvector.scp
+#    done
 
 
     if [ $tts_train == 'true' ]; then
@@ -447,11 +450,11 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     ttsexpdir=exp/tts_${tag}
     model=snapshot.ep.400
     outdir=${ttsexpdir}/outputs_${model}
-    checkpoint_debug="debug_dev debug_train eval_106"
+    checkpoint_debug="eval_106"
 #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
-        cp ${dumpdir}/${name}/data.json ${outdir}/${name}
+        cp ${dumpdir}/${name}/data_clean.json ${outdir}/${name}
         splitjson.py --parts ${nj} ${outdir}/${name}/data.json
         # decode in parallel
         ${train_cmd} JOB=1:${nj} ${outdir}/${name}/log/decode.JOB.log \
