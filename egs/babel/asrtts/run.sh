@@ -248,45 +248,45 @@ fi
 
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     echo "Make MFCCs and compute the energy-based VAD for each dataset"
-#    mfccdir=mfcc
-#    vaddir=mfcc
-#    for name in ${train_set} ${dev_set} ${eval_set}; do
-#        if [ ! -s data/${name}_mfcc/feats.scp ]; then
-#        utils/copy_data_dir.sh data/${name} data/${name}_mfcc
-#        steps/make_mfcc.sh \
-#            --mfcc-config conf/mfcc.conf \
-#            --nj ${nj} --cmd "$train_cmd" \
-#            data/${name}_mfcc exp/make_mfcc ${mfccdir}
-#        utils/fix_data_dir.sh data/${name}_mfcc
-#        sid/compute_vad_decision.sh --nj ${nj} --cmd "$train_cmd" \
-#            data/${name}_mfcc exp/make_vad ${vaddir}
-#        utils/fix_data_dir.sh data/${name}_mfcc
-#        fi
-#    done
-#    # Check pretrained model existence
-#    if [ ! -e ${nnet_dir} ];then
-#        echo "X-vector model does not exist. Download pre-trained model."
-#        wget http://kaldi-asr.org/models/8/0008_sitw_v2_1a.tar.gz
-#        tar xvf 0008_sitw_v2_1a.tar.gz
-#        mv 0008_sitw_v2_1a/exp/xvector_nnet_1a exp
-#        rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
-#    fi
-#    # Extract x-vector
-#    for name in ${train_set} ${dev_set} ${eval_set}; do
-#        sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
-#            ${nnet_dir} data/${name}_mfcc \
-#            ${nnet_dir}/xvectors_${name}
-#    done
-    # Update json
-#    for name in ${train_set} ${dev_set} ${eval_set}; do
-#        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_${name}/xvector.scp
-#    done
-#    for name in ${eval_set}; do
-#        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_train/xvector.scp
-#    done
+    mfccdir=mfcc
+    vaddir=mfcc
+    for name in ${train_set} ${dev_set} ${eval_set}; do
+        if [ ! -s data/${name}_mfcc/feats.scp ]; then
+        utils/copy_data_dir.sh data/${name} data/${name}_mfcc
+        steps/make_mfcc.sh \
+            --mfcc-config conf/mfcc.conf \
+            --nj ${nj} --cmd "$train_cmd" \
+            data/${name}_mfcc exp/make_mfcc ${mfccdir}
+        utils/fix_data_dir.sh data/${name}_mfcc
+        sid/compute_vad_decision.sh --nj ${nj} --cmd "$train_cmd" \
+            data/${name}_mfcc exp/make_vad ${vaddir}
+        utils/fix_data_dir.sh data/${name}_mfcc
+        fi
+    done
+    # Check pretrained model existence
+    if [ ! -e ${nnet_dir} ];then
+        echo "X-vector model does not exist. Download pre-trained model."
+        wget http://kaldi-asr.org/models/8/0008_sitw_v2_1a.tar.gz
+        tar xvf 0008_sitw_v2_1a.tar.gz
+        mv 0008_sitw_v2_1a/exp/xvector_nnet_1a exp
+        rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
+    fi
+    # Extract x-vector
+    for name in ${train_set} ${dev_set} ${eval_set}; do
+        sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
+            ${nnet_dir} data/${name}_mfcc \
+            ${nnet_dir}/xvectors_${name}
+    done
+     Update json
+    for name in ${train_set} ${dev_set} ${eval_set}; do
+        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_${name}/xvector.scp
+    done
+    for name in ${eval_set}; do
+        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_train/xvector.scp
+    done
 fi
 
-if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
+if [ ${stage} -le 100 ] && [ ${stop_stage} -ge 100 ]; then
     echo "stage 3: LM training"
     if [ $use_bpe == 'true' ]; then
         lmexpname=train_rnnlm_${backend}_${lmtag}_${bpemode}${nbpe}
@@ -342,7 +342,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         --dict ${dict}
 fi
 
-if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
+if [ ${stage} -le 100 ] && [ ${stop_stage} -ge 100 ]; then
     echo "stage 3: ASR training and decode"
     expdir=exp/asr_${tag}
     expname=asr_${tag}
@@ -398,6 +398,11 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     [ ${i} -gt 0 ] && echo "$0: ${i} background jobs are failed." && false
     echo "Finished"
     fi
+fi
+
+if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
+    echo "stage 3: Cleaning up data in JSON files"
+
 fi
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
