@@ -468,7 +468,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
                 --ngpu 0 \
                 --verbose ${verbose} \
                 --out ${outdir}/${name}/feats.JOB \
-                --json ${outdir}/${name}/split${nj}utt/data.JOB.json \
+                --json ${outdir}/${name}/split${nj}utt/data_clean.JOB.json \
                 --model ${ttsexpdir}/results/${model} \
                 --config ${decode_tts_config}
         # concatenate scp files
