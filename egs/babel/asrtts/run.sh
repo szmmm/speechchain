@@ -485,7 +485,7 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   model=snapshot.ep.100
   outdir=${ttsexpdir}/outputs_${model}
 #  checkpoint_debug=training_debug_GL
-  checkpoint_debug="debug_dev debug_train eval_106"
+  checkpoint_debug="debug_dev debug_train"
   #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
