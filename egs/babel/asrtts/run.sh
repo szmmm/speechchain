@@ -281,9 +281,6 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     for name in ${train_set} ${dev_set} ${eval_set}; do
         local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_${name}/xvector.scp
     done
-    for name in ${eval_set}; do
-        local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_train/xvector.scp
-    done
 fi
 
 if [ ${stage} -le 100 ] && [ ${stop_stage} -ge 100 ]; then
