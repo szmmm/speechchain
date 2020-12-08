@@ -76,7 +76,7 @@ unpair=dualp
 policy_gradient=true
 use_rnnlm=false
 rnnlm_loss=none
-nj=20
+nj=10
 
 # exp tag
 tag="clean" # tag for managing experiments.
