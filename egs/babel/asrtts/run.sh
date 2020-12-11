@@ -449,12 +449,10 @@ fi
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
-    ###########ttsexpdir=exp/tts_${tag}
-    ttsexpdir=exp_40mel/tts_${tag}
-    model=snapshot.ep.304
+    ttsexpdir=exp/tts_${tag}
+    model=snapshot.ep.230
     outdir=${ttsexpdir}/outputs_${model}
-    ######checkpoint_debug="debug_train eval_106"
-    checkpoint_debug="train_sub"
+    checkpoint_debug="debug_train eval_106"
 #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
@@ -480,12 +478,10 @@ fi
 
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
-  #####ttsexpdir=exp/tts_${tag}
-  ttsexpdir=exp_40mel/tts_${tag}
-  model=snapshot.ep.304
+  ttsexpdir=exp/tts_${tag}
+  model=snapshot.ep.230
   outdir=${ttsexpdir}/outputs_${model}
-  ####checkpoint_debug="debug_train eval_106"
-  checkpoint_debug="train_sub"
+  checkpoint_debug="debug_train eval_106"
   #    for name in ${dev_set} ${eval_set};do
      for name in ${checkpoint_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
