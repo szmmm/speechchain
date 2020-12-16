@@ -466,7 +466,7 @@ def decode(args):
         os.makedirs(outdir)
 
     load_inputs_and_targets = LoadInputsAndTargets(
-        mode='tts', load_input=False, sort_in_input_length=False,
+        mode='tts', load_input=True, sort_in_input_length=False,
         use_speaker_embedding=train_args.use_speaker_embedding,
         preprocess_conf=train_args.preprocess_conf
         if args.preprocess_conf is None else args.preprocess_conf,
@@ -489,16 +489,16 @@ def decode(args):
 
             # logging.warning("length of x is %s" % np.shape(x))
             ilens = [np.shape(x)]  # input length list
-            logging.warning(ilens)
-            logging.warning(data)
-            logging.warning(np.shape(data))
-
+            logging.warning("ilens is", ilens)
+            logging.warning("data has shape: ", np.shape(data))
+            logging.warning("data is", data)
+            logging.warning("spemb is", spemb)
 
             # decode and write
-            outs = model.inference(x, args, spemb)[0]
-            #outs = model.decode_tf(x, ilens, y, spemb)[0]
-            if outs.size(0) == x.size(0) * args.maxlenratio:
-                logging.warning("output length reaches maximum length (%s)." % utt_id)
-            logging.info('(%d/%d) %s (size:%d->%d)' % (
-                idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
-            f[utt_id] = outs.cpu().numpy()
+            # outs = model.inference(x, args, spemb)[0]
+            # #outs = model.decode_tf(x, ilens, y, spemb)[0]
+            # if outs.size(0) == x.size(0) * args.maxlenratio:
+            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
+            # logging.info('(%d/%d) %s (size:%d->%d)' % (
+            #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
+            # f[utt_id] = outs.cpu().numpy()
