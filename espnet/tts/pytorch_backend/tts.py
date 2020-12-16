@@ -488,11 +488,10 @@ def decode(args):
             x = torch.LongTensor(x).to(device)
 
             y = data[1][0]
-            y = torch.LongTensor(y).to(device)
+            y = torch.FloatTensor(y).to(device)
 
-            # logging.warning("length of x is %s" % np.shape(x))
             ilens = np.shape(x)
-            ilens = [map(int, ilens)]  # input length list
+            ilens = list(map(int, ilens))  # input length list
             logging.warning(ilens)
             logging.warning(np.shape(data))
             logging.warning(data)
