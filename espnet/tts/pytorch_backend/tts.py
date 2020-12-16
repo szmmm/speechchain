@@ -491,7 +491,7 @@ def decode(args):
             y = torch.FloatTensor(y).to(device)
 
             ilens = np.shape(x)  # input length list
-            # ilens = list(map(int, ilens))
+            ilens = list(map(int, ilens))
             logging.warning(ilens)
             # logging.warning(np.shape(data))
             # logging.warning(data)
@@ -500,9 +500,9 @@ def decode(args):
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
-            # #outs = model.decode_tf(x, ilens, y, spemb)[0]
-            # if outs.size(0) == x.size(0) * args.maxlenratio:
-            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
-            # logging.info('(%d/%d) %s (size:%d->%d)' % (
-            #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
-            # f[utt_id] = outs.cpu().numpy()
+            outs = model.decode_tf(x, ilens, y, spemb)[0]
+            if outs.size(0) == x.size(0) * args.maxlenratio:
+                logging.warning("output length reaches maximum length (%s)." % utt_id)
+            logging.info('(%d/%d) %s (size:%d->%d)' % (
+                idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
+            f[utt_id] = outs.cpu().numpy()
