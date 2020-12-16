@@ -490,11 +490,11 @@ def decode(args):
             y = data[1][0]
             y = torch.FloatTensor(y).to(device)
 
-            ilens = np.shape(x)
-            ilens = list(map(int, ilens))  # input length list
+            ilens = np.shape(x)  # input length list
+            # ilens = list(map(int, ilens))
             logging.warning(ilens)
-            logging.warning(np.shape(data))
-            logging.warning(data)
+            # logging.warning(np.shape(data))
+            # logging.warning(data)
             logging.warning("y has length: %s" % len(y))
             logging.warning("spemb has length: %s" % len(spemb))
 
