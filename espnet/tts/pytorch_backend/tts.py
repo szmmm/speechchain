@@ -490,7 +490,7 @@ def decode(args):
             # logging.warning("length of x is %s" % np.shape(x))
             ilens = [np.shape(x)]  # input length list
             logging.warning(ilens)
-            logging.warning(data[1][1])
+            logging.warning(data)
             logging.warning(np.shape(data))
 
 
