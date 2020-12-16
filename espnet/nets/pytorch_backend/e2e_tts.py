@@ -426,6 +426,41 @@ class Tacotron2(torch.nn.Module):
         else:
             return after_outs, before_outs, logits
 
+    def decode_tf(self, xs, ilens, ys, olens=None, spembs=None, softargmax=False):
+        """Migrated from Tacotron2 forward computation to do teacher-forcing decoding
+
+        :param torch.Tensor xs: batch of padded character ids (B, Tmax)
+        :param list ilens: list of lengths of each input batch (B)
+        :param torch.Tensor ys: batch of padded target features (B, Lmax, odim)
+        :param torch.Tensor olens:
+        :param torch.Tensor spembs: batch of speaker embedding vector (B, spk_embed_dim)
+        :return: outputs with postnets (B, Lmax, odim)
+        :rtype: torch.Tensor
+        :return: outputs without postnets (B, Lmax, odim)
+        :rtype: torch.Tensor
+        :return: stop logits (B, Lmax)
+        :rtype: torch.Tensor
+        :return: attention weights (B, Lmax, Tmax)
+        :rtype: torch.Tensor
+        """
+        # check ilens type (should be list of int)
+        if isinstance(ilens, torch.Tensor) or isinstance(ilens, np.ndarray):
+            ilens = list(map(int, ilens))
+
+        hs, hlens = self.enc(xs, ilens, softargmax=softargmax)
+        if self.spk_embed_dim is not None:
+            spembs = F.normalize(spembs).unsqueeze(1).expand(-1, hs.size(1), -1)
+            hs = torch.cat([hs, spembs], dim=-1)
+        after_outs, before_outs, logits = self.dec(hs, hlens, ys)
+
+        if self.use_cbhg:
+            if self.reduction_factor > 1:
+                olens = olens.new([olen - olen % self.reduction_factor for olen in olens])
+            cbhg_outs, _ = self.cbhg(after_outs, olens)
+            return cbhg_outs, after_outs, before_outs, logits
+        else:
+            return after_outs, before_outs, logits
+
     def inference(self, x, inference_args, spemb=None):
         """Generates the sequence of features given the sequences of characters
 
