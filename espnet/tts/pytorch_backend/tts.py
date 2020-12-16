@@ -495,14 +495,14 @@ def decode(args):
             logging.warning(ilens)
             # logging.warning(np.shape(data))
             # logging.warning(data)
-            logging.warning("y has length: %s" % len(y))
+            logging.warning("y has length: %s" % np.shape(y))
             logging.warning("spemb has length: %s" % len(spemb))
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
-            outs = model.forward(x, ilens, y, spemb)[0]
-            if outs.size(0) == x.size(0) * args.maxlenratio:
-                logging.warning("output length reaches maximum length (%s)." % utt_id)
-            logging.info('(%d/%d) %s (size:%d->%d)' % (
-                idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
-            f[utt_id] = outs.cpu().numpy()
+            # outs = model.forward(x, ilens, y, spemb)[0]
+            # if outs.size(0) == x.size(0) * args.maxlenratio:
+            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
+            # logging.info('(%d/%d) %s (size:%d->%d)' % (
+            #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
+            # f[utt_id] = outs.cpu().numpy()
