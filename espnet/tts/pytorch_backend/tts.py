@@ -486,6 +486,7 @@ def decode(args):
                 spemb = None
             x = data[0][0]
             x = torch.LongTensor(x).to(device)
+            logging.warning("length of x is %s" % np.shape(x))
 
             # decode and write
             outs = model.inference(x, args, spemb)[0]
