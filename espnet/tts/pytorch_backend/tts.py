@@ -495,8 +495,8 @@ def decode(args):
             logging.warning(ilens)
             # logging.warning(np.shape(data))
             # logging.warning(data)
-            logging.warning("y has length: %s" % np.shape(y))
-            logging.warning("spemb has length: %s" % len(spemb))
+            logging.warning(np.shape(y))
+            logging.warning(np.shape(spemb))
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
