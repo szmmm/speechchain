@@ -500,7 +500,7 @@ def decode(args):
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
-            outs = model.decode_tf(x, ilens, y, spemb)[0]
+            outs = model.forward(x, ilens, y, spemb)[0]
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
