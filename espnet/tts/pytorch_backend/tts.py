@@ -486,10 +486,17 @@ def decode(args):
                 spemb = None
             x = data[0][0]
             x = torch.LongTensor(x).to(device)
-            logging.warning("length of x is %s" % np.shape(x))
+
+            # logging.warning("length of x is %s" % np.shape(x))
+            ilens = [np.shape(x)]  # input length list
+            logging.warning(ilens)
+            logging.warning(data[1][1])
+            logging.warning(np.shape(data))
+
 
             # decode and write
             outs = model.inference(x, args, spemb)[0]
+            #outs = model.decode_tf(x, ilens, y, spemb)[0]
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
