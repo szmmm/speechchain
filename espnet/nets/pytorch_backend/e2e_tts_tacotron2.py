@@ -570,7 +570,9 @@ class Tacotron2(TTSInterface, torch.nn.Module):
         hs, hlens = self.enc(xs, ilens)
         h = hs[0]
         logging.warning(hs)
+        logging.warning(hs.size(1))
         logging.warning(h)
+        logging.warning(h.size(0))
         if self.spk_embed_dim is not None:
             spembs = F.normalize(spembs).unsqueeze(1).expand(-1, hs.size(1), -1)
             hs = torch.cat([hs, spembs], dim=-1)
