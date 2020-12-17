@@ -504,9 +504,16 @@ def decode(args):
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
             outs = model.decode_tf(xs, ilens, ys, spembs)[0]
-            logging.warning(np.shape(outs))
-            logging.warning(outs.size(0))
-            logging.warning(x.size(0))
+            logging.warning("synthesized length is : %s" % outs.size(1))
+            logging.warning("text token length is : %s" % x.size(0))
+            logging.warning("target length is : %s" % y.size(0))
+
+            if outs.size(1) == xs.size(1) * args.maxlenratio:
+                logging.warning("output length reaches maximum length (%s)." % utt_id)
+            logging.info('(%d/%d) %s (size:%d->%d)' % (
+                idx + 1, len(js.keys()), utt_id, xs.size(1), outs.size(1)))
+            f[utt_id] = outs.cpu().numpy()
+
             # if outs.size(0) == x.size(0) * args.maxlenratio:
             #     logging.warning("output length reaches maximum length (%s)." % utt_id)
             # logging.info('(%d/%d) %s (size:%d->%d)' % (
