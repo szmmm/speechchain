@@ -497,25 +497,24 @@ def decode(args):
             ys = y.unsqueeze(0)
             spembs = spemb.unsqueeze(0)
 
-            # logging.warning(xs.size())
-            # logging.warning(ilens)
-            # logging.warning(ys.size())
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
-            outs = model.decode_tf(xs, ilens, ys, spembs)[0]
-            logging.warning("synthesized length is : %s" % outs.size(1))
-            logging.warning("text token length is : %s" % x.size(0))
-            logging.warning("target length is : %s" % y.size(0))
-
-            if outs.size(1) == xs.size(1) * args.maxlenratio:
-                logging.warning("output length reaches maximum length (%s)." % utt_id)
-            logging.info('(%d/%d) %s (size:%d->%d)' % (
-                idx + 1, len(js.keys()), utt_id, xs.size(1), outs.size(1)))
-            f[utt_id] = outs.cpu().numpy()
-
             # if outs.size(0) == x.size(0) * args.maxlenratio:
             #     logging.warning("output length reaches maximum length (%s)." % utt_id)
             # logging.info('(%d/%d) %s (size:%d->%d)' % (
             #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
             # f[utt_id] = outs.cpu().numpy()
+
+            # Teacher forcing decoding
+            outs = model.decode_tf(xs, ilens, ys, spembs)[0]
+            logging.warning("synthesized length is : %s" % outs.size(1))
+            logging.warning("text token length is : %s" % x.size(0))
+            logging.warning("target length is : %s" % y.size(0))
+            out = outs[0]
+            logging.warning("output dimension is : %s" % out.size())
+            if out.size(1) == x.size(0) * args.maxlenratio:
+                logging.warning("output length reaches maximum length (%s)." % utt_id)
+            logging.info('(%d/%d) %s (size:%d->%d)' % (
+                idx + 1, len(js.keys()), utt_id, x.size(0), out.size(0)))
+            f[utt_id] = out.cpu().numpy()
