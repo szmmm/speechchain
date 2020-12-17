@@ -492,16 +492,19 @@ def decode(args):
 
             logging.warning(x)
             logging.warning(x.size())
+            logging.warning(y)
+            logging.warning(y.size())
 
+            # match input dimension
             assert len(x.size()) == 1
             xs = x.unsqueeze(0)
             ilens = [x.size(0)]
-
+            ys = y.unsqueeze(0)
             spembs = spemb.unsqueeze(0)
 
-            logging.warning(xs)
             logging.warning(xs.size())
             logging.warning(ilens)
+            logging.warning(ys.size())
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
