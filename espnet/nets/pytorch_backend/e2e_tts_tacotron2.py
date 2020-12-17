@@ -545,7 +545,7 @@ class Tacotron2(TTSInterface, torch.nn.Module):
 
         return loss
 
-    def decode_tf(self, xs, ilens, ys, spembs=None, softargmax=False):
+    def decode_tf(self, xs, ilens, ys, spembs=None):
         """Migrated from Tacotron2 forward computation to do teacher-forcing decoding
 
         :param torch.Tensor xs: batch of padded character ids (B, Tmax)
@@ -566,11 +566,12 @@ class Tacotron2(TTSInterface, torch.nn.Module):
         if isinstance(ilens, torch.Tensor) or isinstance(ilens, np.ndarray):
             ilens = list(map(int, ilens))
 
-        hs, hlens = self.enc(xs, ilens, softargmax=softargmax)
+        # calculate tacotron2 outputs
+        hs, hlens = self.enc(xs, ilens)
         if self.spk_embed_dim is not None:
             spembs = F.normalize(spembs).unsqueeze(1).expand(-1, hs.size(1), -1)
             hs = torch.cat([hs, spembs], dim=-1)
-        after_outs, before_outs, logits = self.dec(hs, hlens, ys)
+        after_outs, before_outs, logits, att_ws = self.dec(hs, hlens, ys)
 
         return after_outs, before_outs, logits
 
