@@ -480,7 +480,7 @@ def decode(args):
             batch = [(utt_id, js[utt_id])]
             data = load_inputs_and_targets(batch)
             if train_args.use_speaker_embedding:
-                spemb = data[2][0]
+                spemb = data[2][0]  ###  remember to change back spemb = data[1][0]
                 spemb = torch.FloatTensor(spemb).to(device)
             else:
                 spemb = None
@@ -490,26 +490,20 @@ def decode(args):
             y = data[1][0]
             y = torch.FloatTensor(y).to(device)
 
-            # ilens = np.shape(x)  # input length list
-            # ilens = list(map(int, ilens))
-            # logging.warning(np.shape(data))
-            # logging.warning(data)
-            # logging.warning(np.shape(y))
-            # logging.warning(np.shape(spemb))
             logging.warning(x)
-            logging.warning(np.shape(x))
+            logging.warning(x.size())
 
             assert len(x.size()) == 1
             xs = x.unsqueeze(0)
             ilens = [x.size(0)]
 
             logging.warning(xs)
-            logging.warning(np.shape(xs))
+            logging.warning(xs.size())
             logging.warning(ilens)
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
-            outs = model.decode_tf(x, ilens, y, spemb)[0]
+            outs = model.decode_tf(xs, ilens, y, spemb)[0]
             logging.warning(np.shape(outs))
             logging.warning(outs)
             # if outs.size(0) == x.size(0) * args.maxlenratio:
