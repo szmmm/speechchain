@@ -497,7 +497,7 @@ def decode(args):
             # logging.warning(data)
             logging.warning(np.shape(y))
             logging.warning(np.shape(spemb))
-
+            logging.warning(model.use_cbhg)
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
             # outs = model.forward(x, ilens, y, spemb)[0]
