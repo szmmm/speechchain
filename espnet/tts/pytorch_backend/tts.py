@@ -512,8 +512,8 @@ def decode(args):
             logging.warning("text token length is : %s" % x.size(0))
             logging.warning("target length is : %s" % y.size(0))
             out = outs[0]
-            logging.warning("output dimension is : %s" % out.size())
-            if out.size(1) == x.size(0) * args.maxlenratio:
+            logging.warning("output dimension is : %s" % out.size(0))
+            if out.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
                 idx + 1, len(js.keys()), utt_id, x.size(0), out.size(0)))
