@@ -466,7 +466,7 @@ def decode(args):
         os.makedirs(outdir)
 
     load_inputs_and_targets = LoadInputsAndTargets(
-        mode='tts', load_input=True, sort_in_input_length=False,
+        mode='tts', load_input=True, sort_in_input_length=False,  ########################## Remember to Change back load_input
         use_speaker_embedding=train_args.use_speaker_embedding,
         preprocess_conf=train_args.preprocess_conf
         if args.preprocess_conf is None else args.preprocess_conf,
@@ -502,8 +502,10 @@ def decode(args):
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
             outs = model.forward(x, ilens, y, spemb)[0]
-            if outs.size(0) == x.size(0) * args.maxlenratio:
-                logging.warning("output length reaches maximum length (%s)." % utt_id)
-            logging.info('(%d/%d) %s (size:%d->%d)' % (
-                idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
-            f[utt_id] = outs.cpu().numpy()
+            logging.warning(np.shape(outs))
+            logging.warning(outs)
+            # if outs.size(0) == x.size(0) * args.maxlenratio:
+            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
+            # logging.info('(%d/%d) %s (size:%d->%d)' % (
+            #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
+            # f[utt_id] = outs.cpu().numpy()

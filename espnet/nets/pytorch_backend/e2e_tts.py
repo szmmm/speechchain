@@ -401,8 +401,6 @@ class Tacotron2(torch.nn.Module):
             spembs = F.normalize(spembs).unsqueeze(1).expand(-1, hs.size(1), -1)
             hs = torch.cat([hs, spembs], dim=-1)
         after_outs, before_outs, logits = self.dec(hs, hlens, ys)
-
-        return after_outs, before_outs, logits
 #        name=np.random.choice(100, 1)
 #        import matplotlib.pyplot as plt
 #        name=np.random.choice(100, 1)
@@ -420,15 +418,15 @@ class Tacotron2(torch.nn.Module):
 #        #ax3.imshow(mel_fbank_l, aspect='auto', cmap=plt.cm.jet)
 #        ax3.imshow(gt_mel_fbank, aspect='auto', cmap=plt.cm.jet)
 #        fig.savefig('images/asr2ttsfoo.%d.%d.png' % (0,name), orientation='landscape')
-#         if self.use_cbhg:
-#             if self.reduction_factor > 1:
-#                 olens = olens.new([olen - olen % self.reduction_factor for olen in olens])
-#             cbhg_outs, _ = self.cbhg(after_outs, olens)
-#             return cbhg_outs, after_outs, before_outs, logits
-#         else:
-#             return after_outs, before_outs, logits
+        if self.use_cbhg:
+            if self.reduction_factor > 1:
+                olens = olens.new([olen - olen % self.reduction_factor for olen in olens])
+            cbhg_outs, _ = self.cbhg(after_outs, olens)
+            return cbhg_outs, after_outs, before_outs, logits
+        else:
+            return after_outs, before_outs, logits
 
-    def decode_tf(self, xs, ilens, ys, olens=None, spembs=None, softargmax=False):
+    def decode_tf(self, xs, ilens, ys, spembs=None, softargmax=False):
         """Migrated from Tacotron2 forward computation to do teacher-forcing decoding
 
         :param torch.Tensor xs: batch of padded character ids (B, Tmax)
@@ -456,13 +454,6 @@ class Tacotron2(torch.nn.Module):
         after_outs, before_outs, logits = self.dec(hs, hlens, ys)
 
         return after_outs, before_outs, logits
-        # if self.use_cbhg:
-        #     if self.reduction_factor > 1:
-        #         olens = olens.new([olen - olen % self.reduction_factor for olen in olens])
-        #     cbhg_outs, _ = self.cbhg(after_outs, olens)
-        #     return cbhg_outs, after_outs, before_outs, logits
-        # else:
-        #     return after_outs, before_outs, logits
 
     def inference(self, x, inference_args, spemb=None):
         """Generates the sequence of features given the sequences of characters
