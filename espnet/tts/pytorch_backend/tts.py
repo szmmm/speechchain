@@ -506,6 +506,7 @@ def decode(args):
             outs = model.decode_tf(xs, ilens, ys, spembs)[0]
             logging.warning(np.shape(outs))
             logging.warning(outs.size(0))
+            logging.warning(x.size(0))
             # if outs.size(0) == x.size(0) * args.maxlenratio:
             #     logging.warning("output length reaches maximum length (%s)." % utt_id)
             # logging.info('(%d/%d) %s (size:%d->%d)' % (
