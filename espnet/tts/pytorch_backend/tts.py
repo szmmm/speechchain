@@ -508,7 +508,7 @@ def decode(args):
 
             # decode and write
             # outs = model.inference(x, args, spemb)[0]
-            outs = model.decode_tf(xs, ilens, y, spembs)[0]
+            outs = model.decode_tf(xs, ilens, ys, spembs)[0]
             logging.warning(np.shape(outs))
             logging.warning(outs)
             # if outs.size(0) == x.size(0) * args.maxlenratio:
