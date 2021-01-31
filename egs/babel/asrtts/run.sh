@@ -27,12 +27,12 @@ lm_config=conf/lm.yaml
 decode_asr_config=conf/decode_asr.yaml
 
 # feature extraction related
-fs=8000      # sampling frequency
-fmax=3800    # maximum frequency
-fmin=125       # minimum frequency
-n_mels=40     # number of mel basis
-n_fft=512   # number of fft points
-n_shift=128   # number of shift points
+fs=16000      # sampling frequency
+fmax=""    # maximum frequency
+fmin=""       # minimum frequency
+n_mels=80     # number of mel basis
+n_fft=1024   # number of fft points
+n_shift=256   # number of shift points
 win_length="" # window length
 
 # optimization related
@@ -99,15 +99,12 @@ set -e
 set -u
 set -o pipefail
 
-langs="106"
-test="106"
 
 train_set=train
 #train_paired_set=train_paired
 #train_unpaired_set=train_unpaired
 train_dev=dev
-#recog_set="test_clean test_other dev_clean dev_other"
-recog_set="dev eval_106"
+
 
 #echo "stage -3: Data Download"
 #for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
@@ -127,8 +124,7 @@ recog_set="dev eval_106"
 #done
 
 dev_set=$train_dev
-#eval_set=test_clean
-eval_set=eval_106
+eval_set=eval
 fbankdir=fbank
 feat_tr_dir=${dumpdir}/${train_set}; mkdir -p ${feat_tr_dir}
 feat_dt_dir=${dumpdir}/${dev_set}; mkdir -p ${feat_dt_dir}
@@ -143,27 +139,20 @@ bpemodel=data/lang_char/${train_set}_${bpemode}${nbpe}
 #scratch=/mnt/scratch06/tmp/baskar/espnet_new/features
 nnet_dir=exp/xvector_nnet_1a
 
-#if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
-#    echo "stage -1: Tmp space allocation"
-#    local/make_symlink_dir.sh --tmp-root $scratch/$fbankdir $fbankdir
-#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_dir $feat_tr_dir
-#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_p_dir $feat_tr_p_dir
-#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_tr_up_dir $feat_tr_up_dir
-#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_dt_dir $feat_dt_dir
-#    local/make_symlink_dir.sh --tmp-root $scratch/$feat_ev_dir $feat_ev_dir
-#fi
 
-if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
-  echo "stage -1: Setting up individual languages"
-  ./local/setup_languages.sh --langs "${langs}" --test "${test}"
-#  for x in ${train_set} ${train_dev} ${eval_set}; do
-#	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
-#  done
-fi
+
+#if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
+#  echo "stage -1: Setting up individual languages"
+#  ./local/setup_languages.sh --langs "${langs}" --test "${test}"
+##  for x in ${train_set} ${train_dev} ${eval_set}; do
+##	  sed -i.bak -e "s/$/ sox -R -t wav - -t wav - rate 16000 dither | /" data/${x}/wav.scp
+##  done
+#fi
 
 
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Feature extraction for TTS and ASR"
+    # for x in ${train_set} ${train_dev} ${eval_set}; do
     for x in ${train_set} ${train_dev} ${eval_set}; do
         if [ ! -s data/${x}/feats.scp ]; then
         make_fbank.sh --cmd "${train_cmd}" --nj ${nj} \
@@ -179,14 +168,11 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
             ${fbankdir}
         fi
     done
-#    utils/combine_data.sh data/${train_set}_org data/train_clean_100 data/train_clean_360
-#    utils/combine_data.sh data/${dev_set}_org data/dev_clean
-#    utils/copy_data_dir.sh data/${train_paired_set} data/${train_paired_set}_org
-#    utils/copy_data_dir.sh data/${train_unpaired_set} data/${train_unpaired_set}_org
+
     # remove utt having more than 3000 frames
     # remove utt having more than 400 characters
-#    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
-#    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${dev_set}_org data/${dev_set}
+    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set}_org data/${train_set}
+    # remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${dev_set}_org data/${dev_set}
 #    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_paired_set}_org data/${train_paired_set}
 #    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_unpaired_set}_org data/${train_unpaired_set}
     # compute global CMVN
@@ -198,16 +184,13 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 #        data/${train_paired_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train_p ${feat_tr_p_dir}
 #    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
 #        data/${train_unpaired_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/train_up ${feat_tr_up_dir}
-    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
-        data/${dev_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
-    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
-        data/${eval_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/eval ${feat_ev_dir}
-#    for rtask in ${eval_set}; do
-#        feat_synthesis_dir=${dumpdir}/${rtask}; mkdir -p ${feat_synthesis_dir}
-#        dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
-#              data/${rtask}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/synthesis/${rtask} \
-#              ${feat_synthesis_dir}
-#    done
+
+#    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
+#        data/${dev_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
+#    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
+#        data/${eval_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/eval ${feat_ev_dir}
+
+
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
@@ -247,36 +230,36 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 fi
 
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
-#    echo "Make MFCCs and compute the energy-based VAD for each dataset"
-#    mfccdir=mfcc
-#    vaddir=mfcc
-#    for name in ${train_set} ${dev_set} ${eval_set}; do
-#        if [ ! -s data/${name}_mfcc/feats.scp ]; then
-#        utils/copy_data_dir.sh data/${name} data/${name}_mfcc
-#        steps/make_mfcc.sh \
-#            --mfcc-config conf/mfcc.conf \
-#            --nj ${nj} --cmd "$train_cmd" \
-#            data/${name}_mfcc exp/make_mfcc ${mfccdir}
-#        utils/fix_data_dir.sh data/${name}_mfcc
-#        sid/compute_vad_decision.sh --nj ${nj} --cmd "$train_cmd" \
-#            data/${name}_mfcc exp/make_vad ${vaddir}
-#        utils/fix_data_dir.sh data/${name}_mfcc
-#        fi
-#    done
-#    # Check pretrained model existence
-#    if [ ! -e ${nnet_dir} ];then
-#        echo "X-vector model does not exist. Download pre-trained model."
-#        wget http://kaldi-asr.org/models/8/0008_sitw_v2_1a.tar.gz
-#        tar xvf 0008_sitw_v2_1a.tar.gz
-#        mv 0008_sitw_v2_1a/exp/xvector_nnet_1a exp
-#        rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
-#    fi
-#    # Extract x-vector
-#    for name in ${train_set} ${dev_set} ${eval_set}; do
-#        sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
-#            ${nnet_dir} data/${name}_mfcc \
-#            ${nnet_dir}/xvectors_${name}
-#    done
+    echo "Make MFCCs and compute the energy-based VAD for each dataset"
+    mfccdir=mfcc
+    vaddir=mfcc
+    for name in ${train_set} ${dev_set} ${eval_set}; do
+        if [ ! -s data/${name}_mfcc/feats.scp ]; then
+        utils/copy_data_dir.sh data/${name} data/${name}_mfcc
+        steps/make_mfcc.sh \
+            --mfcc-config conf/mfcc.conf \
+            --nj ${nj} --cmd "$train_cmd" \
+            data/${name}_mfcc exp/make_mfcc ${mfccdir}
+        utils/fix_data_dir.sh data/${name}_mfcc
+        sid/compute_vad_decision.sh --nj ${nj} --cmd "$train_cmd" \
+            data/${name}_mfcc exp/make_vad ${vaddir}
+        utils/fix_data_dir.sh data/${name}_mfcc
+        fi
+    done
+    # Check pretrained model existence
+    if [ ! -e ${nnet_dir} ];then
+        echo "X-vector model does not exist. Download pre-trained model."
+        wget http://kaldi-asr.org/models/8/0008_sitw_v2_1a.tar.gz
+        tar xvf 0008_sitw_v2_1a.tar.gz
+        mv 0008_sitw_v2_1a/exp/xvector_nnet_1a exp
+        rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
+    fi
+    # Extract x-vector
+    for name in ${train_set} ${dev_set} ${eval_set}; do
+        sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
+            ${nnet_dir} data/${name}_mfcc \
+            ${nnet_dir}/xvectors_${name}
+    done
     # Update json
     for name in ${train_set} ${dev_set} ${eval_set}; do
         local/update_json.sh ${dumpdir}/${name}/data.json ${nnet_dir}/xvectors_${name}/xvector.scp
