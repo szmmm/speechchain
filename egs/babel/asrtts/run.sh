@@ -27,12 +27,12 @@ lm_config=conf/lm.yaml
 decode_asr_config=conf/decode_asr.yaml
 
 # feature extraction related
-fs=16000      # sampling frequency
+fs=48000     # sampling frequency
 fmax=""    # maximum frequency
 fmin=""       # minimum frequency
 n_mels=80     # number of mel basis
-n_fft=1024   # number of fft points
-n_shift=256   # number of shift points
+n_fft=3072   # number of fft points
+n_shift=768   # number of shift points
 win_length="" # window length
 
 # optimization related
