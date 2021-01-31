@@ -82,6 +82,7 @@ def main():
                               compression_method=args.compression_method
                               ) as writer:
         for utt_id, (rate, array) in reader:
+            logging.warning(rate)
             assert rate == args.fs
             array = array.astype(numpy.float32)
             if args.normalize is not None and args.normalize != 1:

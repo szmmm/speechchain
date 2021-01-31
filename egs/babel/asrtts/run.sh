@@ -101,28 +101,7 @@ set -o pipefail
 
 
 train_set=train
-#train_paired_set=train_paired
-#train_unpaired_set=train_unpaired
 train_dev=dev
-
-
-#echo "stage -3: Data Download"
-#for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
-#    if [ ! -s ${datadir}/${part}.tar.gz ]; then
-#        local/download_and_untar.sh ${datadir} ${data_url} ${part}
-#    fi
-#done
-#
-#### Task dependent. You have to make data the following preparation part by yourself.
-#### But you can utilize Kaldi recipes in most cases
-#echo "stage -2: Data preparation"
-#for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
-#    # use underscore-separated names in data directories.
-#    if [ ! -s data/${part//-/_}/wav.scp ]; then
-#        local/data_prep.sh ${datadir}/LibriSpeech/${part} data/${part//-/_}
-#    fi
-#done
-
 dev_set=$train_dev
 eval_set=eval
 fbankdir=fbank
@@ -138,7 +117,6 @@ nlsyms=data/lang_char/non_lang_syms.txt
 bpemodel=data/lang_char/${train_set}_${bpemode}${nbpe}
 #scratch=/mnt/scratch06/tmp/baskar/espnet_new/features
 nnet_dir=exp/xvector_nnet_1a
-
 
 
 #if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
@@ -189,7 +167,6 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 #        data/${dev_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
 #    dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta false \
 #        data/${eval_set}/feats.scp data/${train_set}/cmvn.ark exp/dump_feats/eval ${feat_ev_dir}
-
 
 fi
 
