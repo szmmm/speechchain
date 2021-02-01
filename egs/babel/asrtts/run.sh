@@ -149,7 +149,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 
     # remove utt having more than 3000 frames
     # remove utt having more than 400 characters
-    # remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set} data/${train_set}
+    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_set} data/${train_set}
     # remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${dev_set}_org data/${dev_set}
 #    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_paired_set}_org data/${train_paired_set}
 #    remove_longshortdata.sh --maxframes 3000 --maxchars 400 data/${train_unpaired_set}_org data/${train_unpaired_set}
