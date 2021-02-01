@@ -199,10 +199,10 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 #         data/${train_paired_set} ${dict} > ${feat_tr_p_dir}/data.json
 #    data2json.sh --feat ${feat_tr_up_dir}/feats.scp \
 #         data/${train_unpaired_set} ${dict} > ${feat_tr_up_dir}/data.json
-    data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms}\
-         data/${dev_set} ${dict} > ${feat_dt_dir}/data.json
-    data2json.sh --feat ${feat_ev_dir}/feats.scp --nlsyms ${nlsyms}\
-         data/${eval_set} ${dict} > ${feat_ev_dir}/data.json
+#    data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms}\
+#         data/${dev_set} ${dict} > ${feat_dt_dir}/data.json
+#    data2json.sh --feat ${feat_ev_dir}/feats.scp --nlsyms ${nlsyms}\
+#         data/${eval_set} ${dict} > ${feat_ev_dir}/data.json
     fi
 fi
 
