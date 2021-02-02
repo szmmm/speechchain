@@ -131,6 +131,7 @@ nnet_dir=exp/xvector_nnet_1a
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Feature extraction for TTS and ASR"
     for x in ${train_set}_org ${train_dev}_org ${eval_set}; do
+        utils/fix_data_dir.sh data/${x}
         if [ ! -s data/${x}/feats.scp ]; then
         make_fbank.sh --cmd "${train_cmd}" --nj ${nj} \
             --fs ${fs} \
