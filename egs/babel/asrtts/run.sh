@@ -175,15 +175,15 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     echo "dictionary: ${dict}"
     ### Task dependent. You have to check non-linguistic symbols used in the corpus.
     mkdir -p data/lang_char/
-    echo "<unk> 1" > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
+    # echo "<unk> 1" > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
     if [ $use_bpe == 'true' ]; then
         cut -f 2- -d" " data/${train_set}/text > data/lang_char/input.txt
         spm_train --input=data/lang_char/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000
         spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     else
-#        echo "make a non-linguistic symbol list"
-#        cut -f 2- data/${train_set}/text | tr " " "\n" | sort | uniq | grep "<" > ${nlsyms}
-#        cat ${nlsyms}
+        echo "make a non-linguistic symbol list"
+        cut -f 2- data/${train_set}/text | tr " " "\n" | sort | uniq | grep "<" > ${nlsyms}
+        cat ${nlsyms}
 
         echo "make a dictionary"
         text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
