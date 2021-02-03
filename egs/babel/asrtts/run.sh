@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=10
 
 # exp tag
-tag="clean" # tag for managing experiments.
+tag="Dev" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
@@ -374,8 +374,8 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
 #   tr_json=$feat_tr_p_dir/data_tts.json
 #    tr_json=$feat_tr_dir/data_tts.json
 #    dt_json=$feat_dt_dir/data_tts.json
-    tr_json=$feat_tr_dir/data_clean.json
-    dt_json=$feat_dt_dir/data_clean.json
+    tr_json=$feat_tr_dir/data.json
+    dt_json=$feat_dt_dir/data.json
     seed=1
     # decoding related
     model=model.loss.best
