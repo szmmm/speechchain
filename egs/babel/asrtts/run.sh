@@ -177,7 +177,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     mkdir -p data/lang_char/
     echo "<unk> 1" > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
     if [ $use_bpe == 'true' ]; then
-        cut -f 2- -d" " data/${train_set}/text > data/lang_char/input.txt
+        cut -f 2- -d" " data/${train_set}/text > data/lang_char/input.txt,
         spm_train --input=data/lang_char/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000
         spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     else
@@ -193,14 +193,14 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     wc -l ${dict}
     # make json labels
     if [ ! -s ${feat_ev_dir}/data.json ]; then
-    data2json.sh --feat ${feat_tr_dir}/feats.scp --nlsyms ${nlsyms}\
-         data/${train_set} ${dict} > ${feat_tr_dir}/data.json
-#    data2json.sh --feat ${feat_tr_p_dir}/feats.scp \
-#         data/${train_paired_set} ${dict} > ${feat_tr_p_dir}/data.json
-#    data2json.sh --feat ${feat_tr_up_dir}/feats.scp \
-#         data/${train_unpaired_set} ${dict} > ${feat_tr_up_dir}/data.json
-    data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms}\
-         data/${dev_set} ${dict} > ${feat_dt_dir}/data.json
+#    data2json.sh --feat ${feat_tr_dir}/feats.scp --nlsyms ${nlsyms}\
+#         data/${train_set} ${dict} > ${feat_tr_dir}/data.json
+##    data2json.sh --feat ${feat_tr_p_dir}/feats.scp \
+##         data/${train_paired_set} ${dict} > ${feat_tr_p_dir}/data.json
+##    data2json.sh --feat ${feat_tr_up_dir}/feats.scp \
+##         data/${train_unpaired_set} ${dict} > ${feat_tr_up_dir}/data.json
+#    data2json.sh --feat ${feat_dt_dir}/feats.scp --nlsyms ${nlsyms}\
+#         data/${dev_set} ${dict} > ${feat_dt_dir}/data.json
     data2json.sh --feat ${feat_ev_dir}/feats.scp --nlsyms ${nlsyms}\
          data/${eval_set} ${dict} > ${feat_ev_dir}/data.json
     fi
@@ -232,7 +232,8 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
         rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
     fi
     # Extract x-vector
-    for name in ${train_set} ${dev_set} ${eval_set}; do
+    for name in ${eval_set}; do
+#    for name in ${train_set} ${dev_set} ${eval_set}; do
         sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
             ${nnet_dir} data/${name}_mfcc \
             ${nnet_dir}/xvectors_${name}
