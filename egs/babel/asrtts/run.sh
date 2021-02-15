@@ -442,9 +442,9 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   ttsexpdir=exp/tts_${tag}
   model=snapshot.ep.200
   outdir=${ttsexpdir}/outputs_${model}
-  checkpoint_debug="train_sub"
-     for name in ${eval_set};do
-     #for name in ${checkpoint_debug};do
+  checkpoint_debug="eval_GL"
+     #for name in ${eval_set};do
+     for name in ${checkpoint_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
