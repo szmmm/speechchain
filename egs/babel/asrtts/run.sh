@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=10
 
 # exp tag
-tag="YTB" # tag for managing experiments.
+tag="EN" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
