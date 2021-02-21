@@ -232,8 +232,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
         rm -rf 0008_sitw_v2_1a.tar.gz 0008_sitw_v2_1a
     fi
     # Extract x-vector
-    for name in ${eval_set}; do
-#    for name in ${train_set} ${dev_set} ${eval_set}; do
+    for name in ${train_set} ${dev_set} ${eval_set}; do
         sid/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 4G" --nj ${nj} \
             ${nnet_dir} data/${name}_mfcc \
             ${nnet_dir}/xvectors_${name}
