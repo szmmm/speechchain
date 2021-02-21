@@ -182,7 +182,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     else
         echo "make a non-linguistic symbol list"
-        cut -f 2- data/${train_set}/text | tr " " "\n" | sort | uniq | grep "<" > ${nlsyms}
+        cut -f 2- data/${train_set}/text | tr " " "\n" | sort | uniq | grep "%" > ${nlsyms}
         cat ${nlsyms}
 
         echo "make a dictionary"
