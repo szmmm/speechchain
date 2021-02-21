@@ -7,5 +7,4 @@ set -o pipefail
 
 ./run.sh \
     --stage 4 \
-    --stop_stage 4 \
-    --resume /data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_YTB/results/snapshot.ep.201
+    --stop_stage 4
