@@ -440,7 +440,8 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
   ttsexpdir=exp/tts_${tag}
   model=snapshot.ep.200
-  outdir=${ttsexpdir}/outputs_${model}
+  # outdir=${ttsexpdir}/outputs_${model}
+  outdir=${ttsexpdir}/outputs_original_audio
   checkpoint_debug="eval_GL"
     for name in ${dev_set};do
      #for name in ${checkpoint_debug};do
