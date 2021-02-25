@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=10
 
 # exp tag
-tag="YTB" # tag for managing experiments.
+tag="EN" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
@@ -410,7 +410,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
     ttsexpdir=exp/tts_${tag}
-    model=snapshot.ep.330
+    model=snapshot.ep.200
     outdir=${ttsexpdir}/outputs_${model}
     #checkpoint_debug="train_sub"
     for name in ${eval_set};do
@@ -439,10 +439,10 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
   ttsexpdir=exp/tts_${tag}
-  model=snapshot.ep.330
+  model=snapshot.ep.200
   outdir=${ttsexpdir}/outputs_${model}
   #outdir=${ttsexpdir}/outputs_original_audio
-  checkpoint_debug="train_sub"
+  checkpoint_debug="eval_checkpoint"
     for name in ${eval_set};do
     #for name in ${checkpoint_debug};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
