@@ -410,12 +410,12 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
     ttsexpdir=exp/tts_${tag}
-    model=snapshot.ep.200
+    model=snapshot.ep.280
     outdir=${ttsexpdir}/outputs_${model}
     checkpoint_debug="eval"
     checkpoint_debug2="train_sub"
     #for name in ${eval_set};do
-    for name in ${checkpoint_debug2};do
+    for name in ${checkpoint_debug} ${checkpoint_debug2};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
         splitjson.py --parts ${nj} ${outdir}/${name}/data.json
@@ -440,13 +440,13 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   echo "stage 6: Synthesize............"
   ttsexpdir=exp/tts_${tag}
-  model=snapshot.ep.200
+  model=snapshot.ep.280
   outdir=${ttsexpdir}/outputs_${model}
   #outdir=${ttsexpdir}/outputs_original_audio
   checkpoint_debug="eval"
   checkpoint_debug2="train_sub"
     #for name in ${eval_set};do
-    for name in ${checkpoint_debug2};do
+    for name in ${checkpoint_debug} ${checkpoint_debug2};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
