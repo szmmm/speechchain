@@ -415,7 +415,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     checkpoint_debug="eval"
     checkpoint_debug2="train_sub"
     #for name in ${eval_set};do
-    for name in ${checkpoint_debug} ${checkpoint_debug2};do
+    for name in ${checkpoint_debug2};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
         splitjson.py --parts ${nj} ${outdir}/${name}/data.json
