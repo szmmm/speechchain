@@ -181,9 +181,9 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         spm_train --input=data/lang_char/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000
         spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     else
-        echo "make a non-linguistic symbol list"
-        cut -f 2- data/${train_set}/text | tr " " "\n"| sort | uniq | grep "_%partial%" > ${nlsyms}
-        cat ${nlsyms}
+#        echo "make a non-linguistic symbol list"
+#        cut -f 2- data/${train_set}/text | tr " " "\n"| sort | uniq | grep "_%partial%" > ${nlsyms}
+#        cat ${nlsyms}
 
         echo "make a dictionary"
         text2token.py -s 1 -n 1 -l ${nlsyms} data/${train_set}/text | cut -f 2- -d" " | tr " " "\n" \
