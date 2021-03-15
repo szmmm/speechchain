@@ -15,7 +15,7 @@ debugmode=1
 dumpdir=dump  # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
-resume=/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_ENv2/results/snapshot.ep.215        # Resume the training from snapshot
+resume=/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_ENv2/results/snapshot.ep.283        # Resume the training from snapshot
 
 # feature configuration
 do_delta=false
