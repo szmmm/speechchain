@@ -12,7 +12,7 @@ stage=-1    # start from -1 if you need to start from data download
 stop_stage=100
 ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
-dumpdir=dump  # directory to dump full features
+dumpdir=dump_approx  # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
 resume=/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_ENv2/results/snapshot.ep.283        # Resume the training from snapshot
@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=20
 
 # exp tag
-tag="ENv2" # tag for managing experiments.
+tag="EN_approx" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
