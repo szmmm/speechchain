@@ -446,7 +446,7 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   checkpoint_debug="eval"
   checkpoint_debug2="train_sub"
     #for name in ${eval_set};do
-    for name in ${checkpoint_debug2};do
+    for name in ${checkpoint_debug} ${checkpoint_debug2};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
