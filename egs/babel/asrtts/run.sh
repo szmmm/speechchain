@@ -12,7 +12,7 @@ stage=-1    # start from -1 if you need to start from data download
 stop_stage=100
 ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
-dumpdir=dump_approx  # directory to dump full features
+dumpdir=dump  # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
 resume=/data/mifs_scratch/mjfg/zs323/yr4project/speechchain/egs/babel/asrtts/exp/tts_EN_approx/results/snapshot.ep.210       # Resume the training from snapshot
@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=20
 
 # exp tag
-tag="EN_approx" # tag for managing experiments.
+tag="ENv2" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
@@ -412,10 +412,10 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     ttsexpdir=exp/tts_${tag}
     model=snapshot.ep.280
     outdir=${ttsexpdir}/outputs_${model}
-    checkpoint_debug="eval"
-    checkpoint_debug2="train_sub"
+    #checkpoint_debug="eval"
+    checkpoint_debug2="train_attention"
     #for name in ${eval_set};do
-    for name in ${checkpoint_debug} ${checkpoint_debug2};do
+    for name in ${checkpoint_debug2};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
         cp ${dumpdir}/${name}/data.json ${outdir}/${name}
         splitjson.py --parts ${nj} ${outdir}/${name}/data.json
@@ -443,8 +443,8 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   model=snapshot.ep.280
   outdir=${ttsexpdir}/outputs_${model}
   #outdir=${ttsexpdir}/outputs_original_audio
-  checkpoint_debug="eval"
-  checkpoint_debug2="train_sub"
+  #checkpoint_debug="eval"
+  checkpoint_debug2="train_attention"
     #for name in ${eval_set};do
     for name in ${checkpoint_debug2};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}

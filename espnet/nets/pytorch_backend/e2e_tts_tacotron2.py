@@ -546,12 +546,11 @@ class Tacotron2(TTSInterface, torch.nn.Module):
         return loss
 
     def decode_tf(self, xs, ilens, ys, spembs=None):
-        """Migrated from Tacotron2 forward computation to do teacher-forcing decoding
+        """Derived from Tacotron2 forward computation to do teacher-forcing decoding (added by zs323)
 
         :param torch.Tensor xs: batch of padded character ids (B, Tmax)
         :param list ilens: list of lengths of each input batch (B)
         :param torch.Tensor ys: batch of padded target features (B, Lmax, odim)
-        :param torch.Tensor olens:
         :param torch.Tensor spembs: batch of speaker embedding vector (B, spk_embed_dim)
         :return: outputs with postnets (B, Lmax, odim)
         :rtype: torch.Tensor
@@ -574,7 +573,7 @@ class Tacotron2(TTSInterface, torch.nn.Module):
             hs = torch.cat([hs, spembs], dim=-1)
         after_outs, before_outs, logits, att_ws = self.dec(hs, hlens, ys)
 
-        return after_outs, before_outs, logits
+        return after_outs, before_outs, logits, att_ws
 
     def inference(self, x, inference_args, spemb=None, *args, **kwargs):
         """Generate the sequence of features given the sequences of characters.
