@@ -576,13 +576,13 @@ def decode(args):
             f[utt_id] = outs.cpu().numpy()
 
             #################  plot and save prob and att_ws ################
-            if probs is not None:
-                _plot_and_save(
-                probs.cpu().numpy(),
-                os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
-                )
-            if att_ws is not None:
-                _plot_and_save(
-                att_ws.cpu().numpy(),
-                os.path.dirname(args.out) + "/att_ws_test/%s_att_ws.png" % utt_id,
-            )
+            # if probs is not None:
+            #     _plot_and_save(
+            #     probs.cpu().numpy(),
+            #     os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
+            #     )
+            # if att_ws is not None:
+            #     _plot_and_save(
+            #     att_ws.cpu().numpy(),
+            #     os.path.dirname(args.out) + "/att_ws_test/%s_att_ws.png" % utt_id,
+            # )
