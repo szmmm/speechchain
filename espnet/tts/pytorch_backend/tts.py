@@ -562,9 +562,13 @@ def decode(args):
 
             # decode and write
             outs, probs, att_ws = model.inference(x, args, spemb)
-            logging.warning("synthesized length is : %s" % outs.size())
-            logging.warning("attention weight size is : %s" % att_ws.size())
-            logging.warning("output probs size is : %s" % probs.size())
+            # logging.warning("synthesized length is : %s" % outs.size())
+            # logging.warning("attention weight size is : %s" % att_ws.size())
+            # logging.warning("output probs size is : %s" % probs.size())
+
+            logging.warning(outs.size())
+            logging.warning(att_ws.size())
+            logging.warning(probs.size())
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
