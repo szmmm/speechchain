@@ -562,9 +562,6 @@ def decode(args):
 
             # decode and write
             outs, probs, att_ws = model.inference(x, args, spemb)
-            # logging.warning("synthesized length is : %s" % outs.size())
-            # logging.warning("attention weight size is : %s" % att_ws.size())
-            # logging.warning("output probs size is : %s" % probs.size())
 
             logging.warning(outs.size())
             logging.warning(att_ws.size())
@@ -576,13 +573,13 @@ def decode(args):
             f[utt_id] = outs.cpu().numpy()
 
             #################  plot and save prob and att_ws ################
-            # if probs is not None:
-            #     _plot_and_save(
-            #     probs.cpu().numpy(),
-            #     os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
-            #     )
-            # if att_ws is not None:
-            #     _plot_and_save(
-            #     att_ws.cpu().numpy(),
-            #     os.path.dirname(args.out) + "/att_ws_test/%s_att_ws.png" % utt_id,
-            # )
+            if probs is not None:
+                _plot_and_save(
+                probs.cpu().numpy(),
+                os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
+                )
+            if att_ws is not None:
+                _plot_and_save(
+                att_ws.cpu().numpy(),
+                os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
+            )
