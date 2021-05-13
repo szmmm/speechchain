@@ -520,58 +520,58 @@ def decode(args):
             # ------------------ Teacher-Forcing Decode --------------------#
             # ------- Teacher-Forcing: change load_input=True ------------- #
 
-            # if train_args.use_speaker_embedding:
-            #     spemb = data[2][0]  # Free Running: spemb = data[1][0] TF: spemb = data[2][0]
-            #     spemb = torch.FloatTensor(spemb).to(device)
-            # else:
-            #     spemb = None
-            # x = data[0][0]
-            # x = torch.LongTensor(x).to(device)
-            #
-            # y = data[1][0]
-            # y = torch.FloatTensor(y).to(device)
-            #
-            # # match input dimension
-            # assert len(x.size()) == 1
-            # xs = x.unsqueeze(0)
-            # ilens = [x.size(0)]
-            # ys = y.unsqueeze(0)
-            # spembs = spemb.unsqueeze(0)
-            #
-            # outs, probs, att_ws = model.decode_tf(xs, ilens, ys, spembs)
-            # logging.warning("synthesized length is : %s" % outs.size(1))
-            # logging.warning("text token length is : %s" % x.size(0))
-            # logging.warning("target length is : %s" % y.size(0))
-            # out = outs[0]
-            # logging.warning("output dimension is : %s" % out.size(0))
-            # if out.size(0) == x.size(0) * args.maxlenratio:
-            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
-            # logging.info('(%d/%d) %s (size:%d->%d)' % (
-            #     idx + 1, len(js.keys()), utt_id, x.size(0), out.size(0)))
-            # f[utt_id] = out.cpu().numpy()
-
-            # ----------------------- Free-Running ---------------------- #
-            # ------- Free_Running: change load_input=False ------------- #
             if train_args.use_speaker_embedding:
-                spemb = data[1][0]
+                spemb = data[2][0]  # Free Running: spemb = data[1][0] TF: spemb = data[2][0]
                 spemb = torch.FloatTensor(spemb).to(device)
             else:
                 spemb = None
             x = data[0][0]
             x = torch.LongTensor(x).to(device)
 
-            # decode and write
-            # outs, probs, att_ws = model.inference(x, args, spemb)
-            outs = model.inference(x, args, spemb)[0]
+            y = data[1][0]
+            y = torch.FloatTensor(y).to(device)
 
-            logging.warning(outs.size())
-            # logging.warning(att_ws.size())
-            # logging.warning(probs.size())
-            if outs.size(0) == x.size(0) * args.maxlenratio:
+            # match input dimension
+            assert len(x.size()) == 1
+            xs = x.unsqueeze(0)
+            ilens = [x.size(0)]
+            ys = y.unsqueeze(0)
+            spembs = spemb.unsqueeze(0)
+
+            outs, probs, att_ws = model.decode_tf(xs, ilens, ys, spembs)
+            logging.warning("synthesized length is : %s" % outs.size(1))
+            logging.warning("text token length is : %s" % x.size(0))
+            logging.warning("target length is : %s" % y.size(0))
+            out = outs[0]
+            logging.warning("output dimension is : %s" % out.size(0))
+            if out.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
-                idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
-            f[utt_id] = outs.cpu().numpy()
+                idx + 1, len(js.keys()), utt_id, x.size(0), out.size(0)))
+            f[utt_id] = out.cpu().numpy()
+
+            # ----------------------- Free-Running ---------------------- #
+            # ------- Free_Running: change load_input=False ------------- #
+            # if train_args.use_speaker_embedding:
+            #     spemb = data[1][0]
+            #     spemb = torch.FloatTensor(spemb).to(device)
+            # else:
+            #     spemb = None
+            # x = data[0][0]
+            # x = torch.LongTensor(x).to(device)
+            #
+            # # decode and write
+            # # outs, probs, att_ws = model.inference(x, args, spemb)
+            # outs = model.inference(x, args, spemb)[0]
+            #
+            # logging.warning(outs.size())
+            # # logging.warning(att_ws.size())
+            # # logging.warning(probs.size())
+            # if outs.size(0) == x.size(0) * args.maxlenratio:
+            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
+            # logging.info('(%d/%d) %s (size:%d->%d)' % (
+            #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
+            # f[utt_id] = outs.cpu().numpy()
 
             #################  plot and save prob and att_ws ################
             # if probs is not None:
