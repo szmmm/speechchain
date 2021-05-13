@@ -538,7 +538,7 @@ def decode(args):
             ys = y.unsqueeze(0)
             spembs = spemb.unsqueeze(0)
 
-            outs, probs, att_ws = model.decode_tf(xs, ilens, ys, spembs)
+            outs = model.decode_tf(xs, ilens, ys, spembs)[0]
             logging.warning("synthesized length is : %s" % outs.size(1))
             logging.warning("text token length is : %s" % x.size(0))
             logging.warning("target length is : %s" % y.size(0))
