@@ -565,8 +565,8 @@ def decode(args):
             outs = model.inference(x, args, spemb)[0]
 
             logging.warning(outs.size())
-            logging.warning(att_ws.size())
-            logging.warning(probs.size())
+            # logging.warning(att_ws.size())
+            # logging.warning(probs.size())
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
