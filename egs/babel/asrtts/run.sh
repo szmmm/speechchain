@@ -412,8 +412,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     ttsexpdir=exp/tts_${tag}
     model=snapshot.ep.280
     outdir=${ttsexpdir}/outputs_${model}
-    checkpoint_debug="eval_attention"
-    checkpoint_debug2="train_attention"
+    checkpoint_debug="eval_low_deletion"
+    checkpoint_debug2="eval_large_deletion"
     #for name in ${eval_set};do
     for name in ${checkpoint_debug} ${checkpoint_debug2};do
         [ ! -e  ${outdir}/${name} ] && mkdir -p ${outdir}/${name}
@@ -443,8 +443,8 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   model=snapshot.ep.280
   outdir=${ttsexpdir}/outputs_${model}
   #outdir=${ttsexpdir}/outputs_original_audio
-  checkpoint_debug="eval_attention"
-  checkpoint_debug2="train_attention"
+  checkpoint_debug="eval_low_deletion"
+  checkpoint_debug2="eval_large_deletion"
     #for name in ${eval_set};do
     for name in ${checkpoint_debug} ${checkpoint_debug2};do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
