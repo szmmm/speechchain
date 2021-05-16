@@ -564,8 +564,8 @@ def decode(args):
             outs, probs, att_ws = model.inference(x, args, spemb)
             # outs = model.inference(x, args, spemb)[0]
 
-            logging.warning(outs.size())
-            # logging.warning(att_ws.size())
+            # logging.warning(outs.size())
+            logging.warning(att_ws)
             # logging.warning(probs.size())
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
@@ -574,13 +574,15 @@ def decode(args):
             f[utt_id] = outs.cpu().numpy()
 
             #################  plot and save prob and att_ws ################
-            if probs is not None:
-                _plot_and_save(
-                probs.cpu().numpy(),
-                os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
-                )
+            # if probs is not None:
+            #     _plot_and_save(
+            #     probs.cpu().numpy(),
+            #     os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
+            #     )
             if att_ws is not None:
                 _plot_and_save(
                 att_ws.cpu().numpy(),
                 os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
-            )
+                )
+                # calculate entropy
+
