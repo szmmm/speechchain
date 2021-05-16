@@ -41,6 +41,7 @@ import matplotlib
 
 from espnet.utils.training.tensorboard_logger import TensorboardLogger
 from tensorboardX import SummaryWriter
+from torch.distributions import Categorical
 
 matplotlib.use('Agg')
 
@@ -566,6 +567,9 @@ def decode(args):
 
             # logging.warning(outs.size())
             logging.warning(att_ws)
+            logging.warning(att_ws.size())
+            logging.warning(att_ws.size()[0])
+            logging.warning(att_ws.size()[1])
             # logging.warning(probs.size())
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
@@ -585,4 +589,8 @@ def decode(args):
                 os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
                 )
                 # calculate entropy
+                for i in range (att_ws.size()[0]):
+                    row = att_ws[i, :]  # Tensor (dim: output length): each row of attention weights
+                    entropy = Categorical(row).entropy()
+                    logging.warning(entropy)
 
