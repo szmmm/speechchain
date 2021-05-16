@@ -592,5 +592,5 @@ def decode(args):
                     row = att_ws[i, :]  # Tensor (dim: output length): each row of attention weights
                     entropy = Categorical(row).entropy()
                     total_entropy = torch.add(total_entropy, entropy)
-                logging.warning(torch.div(total_entropy, att_ws.size()[0])) # return average entropy
-
+                total_entropy = torch.div(total_entropy, att_ws.size()[0])
+                logging.warning("%s has average entropy : %d" % (utt_id, total_entropy.item())) # return average entropy
