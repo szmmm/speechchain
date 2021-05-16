@@ -566,10 +566,7 @@ def decode(args):
             # outs = model.inference(x, args, spemb)[0]
 
             # logging.warning(outs.size())
-            logging.warning(att_ws)
             logging.warning(att_ws.size())
-            logging.warning(att_ws.size()[0])
-            logging.warning(att_ws.size()[1])
             # logging.warning(probs.size())
             if outs.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
@@ -593,7 +590,6 @@ def decode(args):
                 total_entropy = torch.tensor(0).to(device)
                 for i in range(att_ws.size()[0]):
                     row = att_ws[i, :]  # Tensor (dim: output length): each row of attention weights
-                    logging.warning(row.sum())
                     entropy = Categorical(row).entropy()
                     total_entropy.add(entropy)
                 logging.warning(torch.div(total_entropy, att_ws.size()[0])) # return average entropy
