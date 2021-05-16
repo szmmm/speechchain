@@ -589,8 +589,9 @@ def decode(args):
                 os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
                 )
                 # calculate entropy
-                for i in range (att_ws.size()[0]):
+                for i in range(att_ws.size()[0]):
                     row = att_ws[i, :]  # Tensor (dim: output length): each row of attention weights
+                    logging.warning(row.sum())
                     entropy = Categorical(row).entropy()
                     logging.warning(entropy)
 
