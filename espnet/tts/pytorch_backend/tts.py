@@ -588,10 +588,13 @@ def decode(args):
                 att_ws.cpu().numpy(),
                 os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
                 )
+
                 # calculate entropy
+                total_entropy = torch.tensor(0).to(device)
                 for i in range(att_ws.size()[0]):
                     row = att_ws[i, :]  # Tensor (dim: output length): each row of attention weights
                     logging.warning(row.sum())
                     entropy = Categorical(row).entropy()
-                    logging.warning(entropy)
+                    total_entropy.add(entropy)
+                logging.warning(torch.div(total_entropy, att_ws.size()[0])) # return average entropy
 
