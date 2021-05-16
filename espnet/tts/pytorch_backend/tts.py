@@ -593,4 +593,4 @@ def decode(args):
                     entropy = Categorical(row).entropy()
                     total_entropy = torch.add(total_entropy, entropy)
                 total_entropy = torch.div(total_entropy, att_ws.size()[0])
-                logging.warning("%s has average entropy : %d" % (utt_id, total_entropy.item())) # return average entropy
+                logging.warning("%s has average entropy : %f" % (utt_id, total_entropy.item()))
