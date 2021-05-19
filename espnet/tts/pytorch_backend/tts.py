@@ -581,10 +581,10 @@ def decode(args):
             #     os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
             #     )
             if att_ws is not None:
-                _plot_and_save(
-                att_ws.cpu().numpy(),
-                os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
-                )
+                # _plot_and_save(
+                # att_ws.cpu().numpy(),
+                # os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
+                # )
 
                 # calculate entropy
                 total_entropy = torch.tensor(0).to(device)
