@@ -597,5 +597,5 @@ def decode(args):
 
                 # compute KL-divergence compared to uniform distribution
                 input_dim = att_ws.size()[1]
-                total_kl = np.log(input_dim) - total_entropy.item()
-                logging.warning("%s has average KL-divergence : %f" % (utt_id, total_kl))
+                total_kl = total_entropy.item()/np.log(input_dim)
+                logging.warning("%s has average entropy ratio : %f" % (utt_id, total_kl))
