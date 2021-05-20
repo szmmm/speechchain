@@ -589,8 +589,13 @@ def decode(args):
                 # calculate entropy
                 total_entropy = torch.tensor(0).to(device)
                 for i in range(att_ws.size()[0]):
-                    row = att_ws[i, :]  # Tensor (dim: output length): each row of attention weights
+                    row = att_ws[i, :]  # Tensor (dim: input length): each row of attention weights
                     entropy = Categorical(row).entropy()
                     total_entropy = torch.add(total_entropy, entropy)
                 total_entropy = torch.div(total_entropy, att_ws.size()[0])
                 logging.warning("%s has average entropy : %f" % (utt_id, total_entropy.item()))
+
+                # compute KL-divergence compared to uniform distribution
+                input_dim = att_ws.size()[1]
+                total_kl = np.log(input_dim) - total_entropy.item()
+                logging.warning("%s has average KL-divergence : %f" % (utt_id, total_kl))
