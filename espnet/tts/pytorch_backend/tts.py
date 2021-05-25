@@ -617,7 +617,7 @@ def decode(args):
 
                 # compute mean square error
                 slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
-                reference = torch.zeros(att_ws.size()[0], att_ws.size()[0]).to(device)
+                reference = torch.zeros(att_ws.size()[0], att_ws.size()[1]).to(device)
                 # slope = (18 - 1) / (12 - 1)  # (no. row - 1) / (no. column - 1)
                 # reference = torch.zeros(18, 12).to(device)
                 for j in range(reference.size()[1]):
