@@ -626,6 +626,12 @@ def decode(args):
                     col = reference[:, j]
                     row_index = round(j * slope)
                     col[row_index] = 1
+
+                for i in range(reference.size()[0]):
+                    row = reference[i, :]
+                    col_index = round(i / slope)
+                    row[col_index] = 1
+
                 reference = F.normalize(reference, dim=0, p=1)  # normalising rows
 
                 logging.warning(reference)
