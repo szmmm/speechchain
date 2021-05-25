@@ -603,7 +603,7 @@ def decode(args):
                     col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
                     inf_norm = torch.max(col)
                     l1_norm = torch.sum(col)
-                    l2_norm = torch.linalg.norm(col)
+                    l2_norm = torch.norm(col)
                     total_l1 = torch.add(total_l1, l1_norm)
                     total_inf = torch.add(total_inf, inf_norm)
                     total_l2 = torch.add(total_l2, l2_norm)
