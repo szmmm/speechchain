@@ -42,6 +42,7 @@ import matplotlib
 from espnet.utils.training.tensorboard_logger import TensorboardLogger
 from tensorboardX import SummaryWriter
 from torch.distributions import Categorical
+import torch.nn.functional as F
 
 matplotlib.use('Agg')
 
@@ -618,16 +619,14 @@ def decode(args):
                 # slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
                 # reference = torch.zeros(att_ws.size()[0], att_ws.size()[0])
 
-
                 slope = (18 - 1) / (12 - 1)  # (no. row - 1) / (no. column - 1)
-                reference = torch.zeros(18, 12)
+                reference = torch.zeros(18, 12).to(device)
 
                 for j in range(reference.size()[1]):
                     col = reference[:, j]
                     row_index = round(j * slope)
                     col[row_index] = 1
-                for i in range(reference.size()[0]):
-                    reference[i, :] = reference[i, :] / torch.sum(reference[i, :])  # normalising rows
+                reference = F.normalize(reference, dim=0, p=1)  # normalising rows
 
                 logging.warning(reference)
 
