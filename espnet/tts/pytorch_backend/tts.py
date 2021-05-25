@@ -616,30 +616,23 @@ def decode(args):
                 # logging.warning("%s has average infinite norm : %f" % (utt_id, total_inf.item()))
 
                 # compute mean square error
-                # slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
-                # reference = torch.zeros(att_ws.size()[0], att_ws.size()[0])
-
-                slope = (18 - 1) / (12 - 1)  # (no. row - 1) / (no. column - 1)
-                reference = torch.zeros(18, 12).to(device)
-
+                slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
+                reference = torch.zeros(att_ws.size()[0], att_ws.size()[0]).to(device)
+                # slope = (18 - 1) / (12 - 1)  # (no. row - 1) / (no. column - 1)
+                # reference = torch.zeros(18, 12).to(device)
                 for j in range(reference.size()[1]):
                     col = reference[:, j]
                     row_index = round(j * slope)
                     col[row_index] = 1
-
                 for i in range(reference.size()[0]):
                     row = reference[i, :]
                     col_index = round(i / slope)
                     row[col_index] = 1
-
-                reference = F.normalize(reference, dim=0, p=1)  # normalising rows
-
-                logging.warning(reference)
-
-                # for j in range(att_ws.size()[1]):
-                #     reference = torch.zeros(att_ws.size()[0], att_ws.size()[0])
-                #     col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
-
+                reference = F.normalize(reference, dim=1, p=1)  # normalising rows
+                # logging.warning(reference)
+                loss = torch.nn.MSELoss()
+                loss_mse = loss(att_ws, reference)
+                logging.warning("%s has MSE: %f" % (utt_id, loss_mse))
 
                 # compute KL-divergence compared to uniform distribution
                 # input_dim = att_ws.size()[1]
