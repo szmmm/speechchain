@@ -597,44 +597,44 @@ def decode(args):
                 #logging.warning("%s has average entropy : %f" % (utt_id, total_entropy.item()))
 
                 # column norm computation
-                # total_l1 = torch.tensor(0).to(device)
-                # total_l2 = torch.tensor(0).to(device)
-                # total_inf = torch.tensor(0).to(device)
-                # for j in range(att_ws.size()[1]):
-                #     col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
-                #     inf_norm = torch.max(col)
-                #     l1_norm = torch.sum(col)
-                #     l2_norm = torch.norm(col)
-                #     total_l1 = torch.add(total_l1, l1_norm)
-                #     total_inf = torch.add(total_inf, inf_norm)
-                #     total_l2 = torch.add(total_l2, l2_norm)
-                # total_l1 = torch.div(total_l1, att_ws.size()[1])
-                # total_inf = torch.div(total_inf, att_ws.size()[1])
-                # total_l2 = torch.div(total_l2, att_ws.size()[1])
-                # logging.warning("%s has average l1 norm : %f" % (utt_id, total_l1.item()))
-                # logging.warning("%s has average l2 norm : %f" % (utt_id, total_l2.item()))
-                # logging.warning("%s has average infinite norm : %f" % (utt_id, total_inf.item()))
+                total_l1 = torch.tensor(0).to(device)
+                total_l2 = torch.tensor(0).to(device)
+                total_inf = torch.tensor(0).to(device)
+                for j in range(att_ws.size()[1]):
+                    col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
+                    inf_norm = torch.max(col)
+                    l1_norm = torch.sum(col)
+                    l2_norm = torch.norm(col)
+                    total_l1 = torch.add(total_l1, l1_norm)
+                    total_inf = torch.add(total_inf, inf_norm)
+                    total_l2 = torch.add(total_l2, l2_norm)
+                total_l1 = torch.div(total_l1, att_ws.size()[1])
+                total_inf = torch.div(total_inf, att_ws.size()[1])
+                total_l2 = torch.div(total_l2, att_ws.size()[1])
+                logging.warning("%s has average l1 norm : %f" % (utt_id, total_l1.item()))
+                logging.warning("%s has average l2 norm : %f" % (utt_id, total_l2.item()))
+                logging.warning("%s has average infinite norm : %f" % (utt_id, total_inf.item()))
 
                 # compute mean square error
-                slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
-                reference = torch.zeros(att_ws.size()[0], att_ws.size()[1]).to(device)
-                # slope = (18 - 1) / (12 - 1)  # (no. row - 1) / (no. column - 1)
-                # reference = torch.zeros(18, 12).to(device)
-                for j in range(reference.size()[1]):
-                    col = reference[:, j]
-                    row_index = round(j * slope)
-                    col[row_index] = 0.7
-                    col[col == 0] = 0.3 / (att_ws.size()[0] - 1)
-                for i in range(reference.size()[0]):
-                    row = reference[i, :]
-                    col_index = round(i / slope)
-                    row[col_index] = 0.7
+                # slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
+                # reference = torch.zeros(att_ws.size()[0], att_ws.size()[1]).to(device)
+                # # slope = (18 - 1) / (12 - 1)  # (no. row - 1) / (no. column - 1)
+                # # reference = torch.zeros(18, 12).to(device)
+                # for j in range(reference.size()[1]):
+                #     col = reference[:, j]
+                #     row_index = round(j * slope)
+                #     col[row_index] = 0.7
+                #     col[col == 0] = 0.3 / (att_ws.size()[0] - 1)
+                # for i in range(reference.size()[0]):
+                #     row = reference[i, :]
+                #     col_index = round(i / slope)
+                #     row[col_index] = 0.7
 
-                reference = F.normalize(reference, dim=1, p=1)  # normalising rows
-                # logging.warning(reference)
-                loss = torch.nn.MSELoss()
-                loss_mse = loss(att_ws, reference)
-                logging.warning("%s has MSE: %f" % (utt_id, loss_mse))
+                # reference = F.normalize(reference, dim=1, p=1)  # normalising rows
+                # # logging.warning(reference)
+                # loss = torch.nn.MSELoss()
+                # loss_mse = loss(att_ws, reference)
+                # logging.warning("%s has MSE: %f" % (utt_id, loss_mse))
 
                 # compute KL-divergence compared to uniform distribution
                 # input_dim = att_ws.size()[1]
