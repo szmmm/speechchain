@@ -623,11 +623,13 @@ def decode(args):
                 for j in range(reference.size()[1]):
                     col = reference[:, j]
                     row_index = round(j * slope)
-                    col[row_index] = 1
+                    col[row_index] = 0.7
+                    col[col == 0] = 0.3 / (att_ws.size()[0] - 1)
                 for i in range(reference.size()[0]):
                     row = reference[i, :]
                     col_index = round(i / slope)
-                    row[col_index] = 1
+                    row[col_index] = 0.7
+
                 reference = F.normalize(reference, dim=1, p=1)  # normalising rows
                 # logging.warning(reference)
                 loss = torch.nn.MSELoss()
