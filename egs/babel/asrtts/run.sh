@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=20
 
 # exp tag
-tag="YTB" # tag for managing experiments.
+tag="ENv2" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
@@ -410,7 +410,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
     ttsexpdir=exp/tts_${tag}
-    model=snapshot.ep.200
+    model=snapshot.ep.280
     outdir=${ttsexpdir}/outputs_${model}
     checkpoint_debug="eval_attention"
     # checkpoint_debug2="eval_large_deletion"
@@ -443,10 +443,10 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   model=snapshot.ep.280
   outdir=${ttsexpdir}/outputs_${model}
   #outdir=${ttsexpdir}/outputs_original_audio
-  checkpoint_debug="eval_low_deletion"
-  checkpoint_debug2="eval_large_deletion"
+  checkpoint_debug="eval_GL"
+#  checkpoint_debug2="eval_large_deletion"
     #for name in ${eval_set};do
-    for name in ${checkpoint_debug} ${checkpoint_debug2};do
+    for name in ${checkpoint_debug} ;do
         [ ! -e ${outdir}_denorm/${name} ] && mkdir -p ${outdir}_denorm/${name}
         apply-cmvn --norm-vars=true --reverse=true data/${train_set}/cmvn.ark \
             scp:${outdir}/${name}/feats.scp \
