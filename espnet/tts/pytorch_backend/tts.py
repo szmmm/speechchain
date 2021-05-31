@@ -602,17 +602,17 @@ def decode(args):
 
                 for j in range(att_ws.size()[1]):
                     col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
-                    l1_norm = torch.sum(col)
-                    l2_norm = torch.norm(col)
+                    l1_norm = torch.sum(col) / col.size()[0]
+                    #l2_norm = torch.norm(col)
 
                     total_l1_var_vector[j] = l1_norm
-                    total_l2_var_vector[j] = l2_norm
+                    #total_l2_var_vector[j] = l2_norm
 
                 total_l1 = torch.var(total_l1_var_vector).to(device)
                 total_l2 = torch.var(total_l2_var_vector).to(device)
 
                 logging.warning("%s has average l1 variance : %f" % (utt_id, total_l1.item()))
-                logging.warning("%s has average l2 variance : %f" % (utt_id, total_l2.item()))
+
 
                 # compute mean square error
                 # slope = (att_ws.size()[0] - 1) / (att_ws.size()[1] - 1)  # (no. row - 1) / (no. column - 1)
