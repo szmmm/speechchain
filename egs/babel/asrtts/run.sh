@@ -79,7 +79,7 @@ rnnlm_loss=none
 nj=20
 
 # exp tag
-tag="ENv2" # tag for managing experiments.
+tag="YTB" # tag for managing experiments.
 #asr_model_conf=$PWD/pretrained_models/librispeech_100/asr/results/model.json
 #asr_model=$PWD/pretrained_models/librispeech_100/asr/results/model.acc.best
 #rnnlm_model=$PWD/rnnlm_models/librispeech_360/rnnlm.model.best
@@ -410,7 +410,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding.............."
     if [ $tts_decode == 'true' ]; then
     ttsexpdir=exp/tts_${tag}
-    model=snapshot.ep.280
+    model=snapshot.ep.200
     outdir=${ttsexpdir}/outputs_${model}
     checkpoint_debug="eval_attention"
     # checkpoint_debug2="eval_large_deletion"
