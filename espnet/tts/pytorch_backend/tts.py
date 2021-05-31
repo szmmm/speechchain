@@ -611,8 +611,6 @@ def decode(args):
                 total_l1 = torch.var(total_l1_var_vector).to(device)
                 total_l2 = torch.var(total_l2_var_vector).to(device)
 
-                logging.warning("%s has average l1 norm : %f" % (utt_id, total_l1.item()))
-                logging.warning("%s has average l2 norm : %f" % (utt_id, total_l2.item()))
                 logging.warning("%s has average l1 variance : %f" % (utt_id, total_l1.item()))
                 logging.warning("%s has average l2 variance : %f" % (utt_id, total_l2.item()))
 
