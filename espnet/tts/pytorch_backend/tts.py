@@ -568,13 +568,13 @@ def decode(args):
             # # outs = model.inference(x, args, spemb)[0]
 
             # logging.warning(outs.size())
-            logging.warning(att_ws.size())
-            # logging.warning(probs.size())
-            if outs.size(0) == x.size(0) * args.maxlenratio:
-                logging.warning("output length reaches maximum length (%s)." % utt_id)
-            logging.info('(%d/%d) %s (size:%d->%d)' % (
-                idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
-            f[utt_id] = outs.cpu().numpy()
+            # logging.warning(att_ws.size())
+            # # logging.warning(probs.size())
+            # if outs.size(0) == x.size(0) * args.maxlenratio:
+            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
+            # logging.info('(%d/%d) %s (size:%d->%d)' % (
+            #     idx + 1, len(js.keys()), utt_id, x.size(0), outs.size(0)))
+            # f[utt_id] = outs.cpu().numpy()
 
             #################  plot and save prob and att_ws ################
             # if probs is not None:
