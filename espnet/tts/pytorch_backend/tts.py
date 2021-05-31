@@ -545,12 +545,12 @@ def decode(args):
             logging.warning("synthesized length is : %s" % outs.size(1))
             logging.warning("text token length is : %s" % x.size(0))
             logging.warning("target length is : %s" % y.size(0))
-            logging.warning("batch of att_wt has size : %s" % att_ws_s.size())
+            logging.warning("batch of att_wt has size : %s" % att_ws_s.size(0))
 
             out = outs[0]
             att_ws = att_ws_s[0]
             logging.warning("output dimension is : %s" % out.size(0))
-            logging.warning("att_ws has size : %s" % att_ws_s.size())
+
             if out.size(0) == x.size(0) * args.maxlenratio:
                 logging.warning("output length reaches maximum length (%s)." % utt_id)
             logging.info('(%d/%d) %s (size:%d->%d)' % (
