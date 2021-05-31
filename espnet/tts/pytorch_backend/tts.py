@@ -468,7 +468,7 @@ def decode(args):
         os.makedirs(outdir)
 
     load_inputs_and_targets = LoadInputsAndTargets(
-        mode='tts', load_input=False, sort_in_input_length=False,  ########### Free_Running: load_input=False #########
+        mode='tts', load_input=True, sort_in_input_length=False,  ########### Free_Running: load_input=False #########
         use_speaker_embedding=train_args.use_speaker_embedding,
         preprocess_conf=train_args.preprocess_conf
         if args.preprocess_conf is None else args.preprocess_conf,
@@ -521,50 +521,51 @@ def decode(args):
 
             # ------------------ Teacher-Forcing Decode --------------------#
             # ------- Teacher-Forcing: change load_input=True ------------- #
-            #
-            # if train_args.use_speaker_embedding:
-            #     spemb = data[2][0]  # Free Running: spemb = data[1][0] TF: spemb = data[2][0]
-            #     spemb = torch.FloatTensor(spemb).to(device)
-            # else:
-            #     spemb = None
-            # x = data[0][0]
-            # x = torch.LongTensor(x).to(device)
-            #
-            # y = data[1][0]
-            # y = torch.FloatTensor(y).to(device)
-            #
-            # # match input dimension
-            # assert len(x.size()) == 1
-            # xs = x.unsqueeze(0)
-            # ilens = [x.size(0)]
-            # ys = y.unsqueeze(0)
-            # spembs = spemb.unsqueeze(0)
-            #
-            # outs = model.decode_tf(xs, ilens, ys, spembs)[0]
-            # logging.warning("synthesized length is : %s" % outs.size(1))
-            # logging.warning("text token length is : %s" % x.size(0))
-            # logging.warning("target length is : %s" % y.size(0))
-            # out = outs[0]
-            # logging.warning("output dimension is : %s" % out.size(0))
-            # if out.size(0) == x.size(0) * args.maxlenratio:
-            #     logging.warning("output length reaches maximum length (%s)." % utt_id)
-            # logging.info('(%d/%d) %s (size:%d->%d)' % (
-            #     idx + 1, len(js.keys()), utt_id, x.size(0), out.size(0)))
-            # f[utt_id] = out.cpu().numpy()
 
-            # ----------------------- Free-Running ---------------------- #
-            # ------- Free_Running: change load_input=False ------------- #
             if train_args.use_speaker_embedding:
-                spemb = data[1][0]
+                spemb = data[2][0]  # Free Running: spemb = data[1][0] TF: spemb = data[2][0]
                 spemb = torch.FloatTensor(spemb).to(device)
             else:
                 spemb = None
             x = data[0][0]
             x = torch.LongTensor(x).to(device)
 
-            # decode and write
-            outs, probs, att_ws = model.inference(x, args, spemb)
-            # outs = model.inference(x, args, spemb)[0]
+            y = data[1][0]
+            y = torch.FloatTensor(y).to(device)
+
+            # match input dimension
+            assert len(x.size()) == 1
+            xs = x.unsqueeze(0)
+            ilens = [x.size(0)]
+            ys = y.unsqueeze(0)
+            spembs = spemb.unsqueeze(0)
+
+            outs, before_outs, logits, att_ws = model.decode_tf(xs, ilens, ys, spembs)
+            # outs = model.decode_tf(xs, ilens, ys, spembs)[0]
+            logging.warning("synthesized length is : %s" % outs.size(1))
+            logging.warning("text token length is : %s" % x.size(0))
+            logging.warning("target length is : %s" % y.size(0))
+            out = outs[0]
+            logging.warning("output dimension is : %s" % out.size(0))
+            if out.size(0) == x.size(0) * args.maxlenratio:
+                logging.warning("output length reaches maximum length (%s)." % utt_id)
+            logging.info('(%d/%d) %s (size:%d->%d)' % (
+                idx + 1, len(js.keys()), utt_id, x.size(0), out.size(0)))
+            f[utt_id] = out.cpu().numpy()
+
+            # ----------------------- Free-Running ---------------------- #
+            # ------- Free_Running: change load_input=False ------------- #
+            # if train_args.use_speaker_embedding:
+            #     spemb = data[1][0]
+            #     spemb = torch.FloatTensor(spemb).to(device)
+            # else:
+            #     spemb = None
+            # x = data[0][0]
+            # x = torch.LongTensor(x).to(device)
+            #
+            # # decode and write
+            # outs, probs, att_ws = model.inference(x, args, spemb)
+            # # outs = model.inference(x, args, spemb)[0]
 
             # logging.warning(outs.size())
             logging.warning(att_ws.size())
@@ -582,10 +583,10 @@ def decode(args):
             #     os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
             #     )
             if att_ws is not None:
-                # _plot_and_save(
-                # att_ws.cpu().numpy(),
-                # os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
-                # )
+                _plot_and_save(
+                att_ws.cpu().numpy(),
+                os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
+                )
 
                 # calculate entropy
                 # total_entropy = torch.tensor(0).to(device)
@@ -597,21 +598,17 @@ def decode(args):
                 #logging.warning("%s has average entropy : %f" % (utt_id, total_entropy.item()))
 
                 # column norm computation and the variance
-                total_l1_var_vector = torch.zeros(att_ws.size()[1]).to(device)
-                total_l2_var_vector = torch.zeros(att_ws.size()[1]).to(device)
-
-                for j in range(att_ws.size()[1]):
-                    col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
-                    l1_norm = torch.sum(col) / col.size()[0]
-                    #l2_norm = torch.norm(col)
-
-                    total_l1_var_vector[j] = l1_norm
-                    #total_l2_var_vector[j] = l2_norm
-
-                total_l1 = torch.var(total_l1_var_vector).to(device)
-                total_l2 = torch.var(total_l2_var_vector).to(device)
-
-                logging.warning("%s has average l1 variance : %f" % (utt_id, total_l1.item()))
+                # total_l1_var_vector = torch.zeros(att_ws.size()[1]).to(device)
+                # total_l2_var_vector = torch.zeros(att_ws.size()[1]).to(device)
+                # for j in range(att_ws.size()[1]):
+                #     col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
+                #     l1_norm = torch.sum(col) / col.size()[0]
+                #     #l2_norm = torch.norm(col)
+                #     total_l1_var_vector[j] = l1_norm
+                #     #total_l2_var_vector[j] = l2_norm
+                # total_l1 = torch.var(total_l1_var_vector).to(device)
+                # total_l2 = torch.var(total_l2_var_vector).to(device)
+                # logging.warning("%s has average l1 variance : %f" % (utt_id, total_l1.item()))
 
 
                 # compute mean square error
