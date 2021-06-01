@@ -586,33 +586,33 @@ def decode(args):
             #     probs.cpu().numpy(),
             #     os.path.dirname(args.out) + "/probs/%s_prob.png" % utt_id,
             #     )
-            if att_ws is not None:
-                _plot_and_save(
-                att_ws.cpu().numpy(),
-                os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
-                )
+            # if att_ws is not None:
+            #     _plot_and_save(
+            #     att_ws.cpu().numpy(),
+            #     os.path.dirname(args.out) + "/att_ws/%s_att_ws.png" % utt_id,
+            #     )
 
                 # calculate entropy
-                # total_entropy = torch.tensor(0).to(device)
-                # for i in range(att_ws.size()[0]):
-                #     row = att_ws[i, :]  # Tensor (dim: input length): each row of attention weights
-                #     entropy = Categorical(row).entropy()
-                #     total_entropy = torch.add(total_entropy, entropy)
-                # total_entropy = torch.div(total_entropy, att_ws.size()[0])
-                #logging.warning("%s has average entropy : %f" % (utt_id, total_entropy.item()))
+                total_entropy = torch.tensor(0).to(device)
+                for i in range(att_ws.size()[0]):
+                    row = att_ws[i, :]  # Tensor (dim: input length): each row of attention weights
+                    entropy = Categorical(row).entropy()
+                    total_entropy = torch.add(total_entropy, entropy)
+                total_entropy = torch.div(total_entropy, att_ws.size()[0])
+                logging.warning("%s has average entropy : %f" % (utt_id, total_entropy.item()))
 
                 # column norm computation and the variance
-                # total_l1_var_vector = torch.zeros(att_ws.size()[1]).to(device)
+                total_l1_var_vector = torch.zeros(att_ws.size()[1]).to(device)
                 # total_l2_var_vector = torch.zeros(att_ws.size()[1]).to(device)
-                # for j in range(att_ws.size()[1]):
-                #     col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
-                #     l1_norm = torch.sum(col) / col.size()[0]
-                #     #l2_norm = torch.norm(col)
-                #     total_l1_var_vector[j] = l1_norm
-                #     #total_l2_var_vector[j] = l2_norm
-                # total_l1 = torch.var(total_l1_var_vector).to(device)
+                for j in range(att_ws.size()[1]):
+                    col = att_ws[:, j]  # Tensor (dim: output length): each column of attention weights
+                    l1_norm = torch.sum(col) / col.size()[0]
+                    #l2_norm = torch.norm(col)
+                    total_l1_var_vector[j] = l1_norm
+                    #total_l2_var_vector[j] = l2_norm
+                total_l1 = torch.var(total_l1_var_vector).to(device)
                 # total_l2 = torch.var(total_l2_var_vector).to(device)
-                # logging.warning("%s has average l1 variance : %f" % (utt_id, total_l1.item()))
+                logging.warning("%s has average l1 variance : %f" % (utt_id, total_l1.item()))
 
 
                 # compute mean square error
